@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import qrCode from '../../../public/img/qr.jpg';
+// import qrCode from '../../../public/img/qr.jpg';
 
 interface Order {
   name: string;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
@@ -35,8 +34,6 @@ export default function Bill() {
     fullName: '',
     bankName: '',
   });
-
-  const router = useRouter();
 
   const handleAddPerson = () => {
     console.log('Adding person:', { newName, newValue });
