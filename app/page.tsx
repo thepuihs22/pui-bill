@@ -236,7 +236,7 @@ export default function Bill() {
               }, 0);
               return (
                 <p key={person.name} className="text-sm">
-                  {person.name}'s pay: {personTotal.toFixed(2)} Baht.
+                  {person.name}&apos;s pay: {personTotal.toFixed(2)} Baht.
                 </p>
               );
             })}
