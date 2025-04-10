@@ -26,6 +26,8 @@ export default function Bill() {
   const [newOrderValue, setNewOrderValue] = useState('');
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
 
+  const [showCopied, setShowCopied] = useState(false);
+
   const router = useRouter();
 
   const handleAddPerson = () => {
@@ -107,10 +109,25 @@ export default function Bill() {
     
     // Create share URL with data
     const shareUrl = `${window.location.origin}/share/${encodedData}`;
+    
+    // Copy to clipboard
     navigator.clipboard.writeText(shareUrl);
     
-    // Navigate to share page
-    router.push(`/share/${encodedData}`);
+    // Open in new tab instead of navigating
+    window.open(shareUrl, '_blank');
+  }, [orders, people]);
+
+  const handleCopyLink = useCallback(() => {
+    const shareData = {
+      orders,
+      people
+    };
+    const encodedData = encodeURIComponent(btoa(JSON.stringify(shareData)));
+    const shareUrl = `${window.location.origin}/share/${encodedData}`;
+    
+    navigator.clipboard.writeText(shareUrl);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
   }, [orders, people]);
 
   return (
@@ -249,12 +266,31 @@ export default function Bill() {
           <div className="mt-6 p-4 bg-slate-400 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-bold text-xl">Summary</h2>
-              <button
-                onClick={handleShare}
-                className="bg-green-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
-              >
-                Share Bill
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyLink}
+                  className="bg-blue-500 text-white px-3 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out relative"
+                  title="Copy share link"
+                >
+                  {/* Clipboard Icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                  {/* Copied Notification */}
+                  {showCopied && (
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-sm py-1 px-2 rounded">
+                      Copied!
+                    </div>
+                  )}
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="bg-green-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Review Bill
+                </button>
+              </div>
             </div>
             <p className="font-bold text-lg border-b-2 border-black pb-2 flex justify-between">
               <span>Total Orders:</span>
