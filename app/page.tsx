@@ -12,7 +12,6 @@ const formatNumber = (num: number) => {
 export default function Bill() {
   const [people, setPeople] = useState<{ name: string; value: number }[]>([]);
   const [newName, setNewName] = useState('');
-  const [newValue, setNewValue] = useState('');
   const [activeTab, setActiveTab] = useState('payment');
 
   // Add new states for orders
@@ -58,7 +57,6 @@ export default function Bill() {
         value: 0
       }]);
       setNewName('');
-      setNewValue('');
     }
   };
 
@@ -143,7 +141,8 @@ export default function Bill() {
   const handleCopyLink = useCallback(() => {
     const shareData = {
       orders,
-      people
+      people,
+      paymentInfo
     };
     const encodedData = encodeURIComponent(btoa(JSON.stringify(shareData)));
     const shareUrl = `${window.location.origin}/share/${encodedData}`;
@@ -151,7 +150,7 @@ export default function Bill() {
     navigator.clipboard.writeText(shareUrl);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
-  }, [orders, people]);
+  }, [orders, people, paymentInfo]);
 
   // Add this new handler function
   const handleToggleAllPeople = () => {
@@ -249,8 +248,8 @@ export default function Bill() {
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Add all people who are splitting the bill</li>
-            <li>Each person's name must be unique</li>
-            <li>You can remove people if they haven't been added to any orders</li>
+            <li>Each person&apos;s name must be unique</li>
+            <li>You can remove people if they haven&apos;t been added to any orders</li>
           </ol>
         </div>
       </div>
@@ -401,7 +400,7 @@ export default function Bill() {
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Enter the order name and total amount</li>
-            <li>Select who's splitting this order (use "All" button to select everyone)</li>
+            <li>Select who&apos;s splitting this order (use "All" button to select everyone)</li>
             <li>The amount will be split equally between selected people</li>
             <li>Review the summary and share the bill when done</li>
           </ol>

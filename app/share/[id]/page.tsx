@@ -103,10 +103,10 @@ export default function SharePage() {
               <h3 className="font-bold text-lg mb-3 text-center">Payment Information</h3>
               <p className="text-center mb-4">
                 Please transfer to:<br />
-                <span className="font-bold">{data.paymentInfo.fullName || '-'}</span><br />
-                Account Name: <span className="font-bold">{data.paymentInfo.accountName || '-'}</span><br />
-                Bank Name: <span className="font-bold">{data.paymentInfo.bankName || '-'}</span><br />
-                Promptpay: <span className="font-bold">{data.paymentInfo.promptpay || '-'}</span>
+                <span className="font-bold">{data.paymentInfo?.fullName || '-'}</span><br />
+                Account Name: <span className="font-bold">{data.paymentInfo?.accountName || '-'}</span><br />
+                Bank Name: <span className="font-bold">{data.paymentInfo?.bankName || '-'}</span><br />
+                Promptpay: <span className="font-bold">{data.paymentInfo?.promptpay || '-'}</span>
               </p>
               <p className="text-center mt-4 text-sm text-gray-600">
                 After transferring, please send a screenshot to confirm your payment
