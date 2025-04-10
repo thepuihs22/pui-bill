@@ -13,6 +13,12 @@ interface Order {
 interface ShareData {
   orders: Order[];
   people: { name: string; value: number }[];
+  paymentInfo: {
+    accountName: string;
+    promptpay: string;
+    fullName: string;
+    bankName: string;
+  };
 }
 
 const formatNumber = (num: number) => {
@@ -96,16 +102,12 @@ export default function SharePage() {
             <div className="bg-white p-4 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_black]">
               <h3 className="font-bold text-lg mb-3 text-center">Payment Information</h3>
               <p className="text-center mb-4">
-                Please transfer to Promptpay:<br />
-                <span className="font-bold">091-142-1142</span>
+                Please transfer to:<br />
+                <span className="font-bold">{data.paymentInfo.fullName || '-'}</span><br />
+                Account Name: <span className="font-bold">{data.paymentInfo.accountName || '-'}</span><br />
+                Bank Name: <span className="font-bold">{data.paymentInfo.bankName || '-'}</span><br />
+                Promptpay: <span className="font-bold">{data.paymentInfo.promptpay || '-'}</span>
               </p>
-              <div className="flex justify-center">
-                <img
-                  src={qrCode.src}
-                  alt="Promptpay QR Code"
-                  className="w-48 h-48 border-2 border-black"
-                />
-              </div>
               <p className="text-center mt-4 text-sm text-gray-600">
                 After transferring, please send a screenshot to confirm your payment
               </p>

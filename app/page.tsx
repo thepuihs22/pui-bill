@@ -14,7 +14,7 @@ export default function Bill() {
   const [people, setPeople] = useState<{ name: string; value: number }[]>([]);
   const [newName, setNewName] = useState('');
   const [newValue, setNewValue] = useState('');
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('payment');
 
   // Add new states for orders
   const [orders, setOrders] = useState<{
@@ -27,6 +27,14 @@ export default function Bill() {
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
 
   const [showCopied, setShowCopied] = useState(false);
+
+  // Add new state for payment info
+  const [paymentInfo, setPaymentInfo] = useState({
+    accountName: '',
+    promptpay: '',
+    fullName: '',
+    bankName: '',
+  });
 
   const router = useRouter();
 
@@ -99,23 +107,26 @@ export default function Bill() {
     setOrders(orders.filter((_, i) => i !== index));
   };
 
+  // Add payment info update handler
+  const handlePaymentInfoUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPaymentInfo(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  // Update handleShare to include payment info
   const handleShare = useCallback(() => {
     const shareData = {
       orders,
-      people
+      people,
+      paymentInfo
     };
-    // Encode data to base64 and make it URL safe
     const encodedData = encodeURIComponent(btoa(JSON.stringify(shareData)));
-    
-    // Create share URL with data
     const shareUrl = `${window.location.origin}/share/${encodedData}`;
-    
-    // Copy to clipboard
     navigator.clipboard.writeText(shareUrl);
-    
-    // Open in new tab instead of navigating
     window.open(shareUrl, '_blank');
-  }, [orders, people]);
+  }, [orders, people, paymentInfo]);
 
   const handleCopyLink = useCallback(() => {
     const shareData = {
@@ -133,10 +144,20 @@ export default function Bill() {
   return (
     <div className="max-w-lg mx-auto p-4 font-mono">
       <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
-        Check your bill
+        Calculate your bills
       </h1>
 
       <div className="flex mb-4 gap-2">
+        <button
+          className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
+            activeTab === 'payment'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black]'
+              : 'bg-slate-400 shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black]'
+          }`}
+          onClick={() => setActiveTab('payment')}
+        >
+          Payment Info
+        </button>
         <button
           className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
             activeTab === 'users'
@@ -145,7 +166,7 @@ export default function Bill() {
           }`}
           onClick={() => setActiveTab('users')}
         >
-          Users
+          Members
         </button>
         <button
           className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
@@ -314,6 +335,59 @@ export default function Bill() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Update the Payment Info Form */}
+      <div className={`mb-6 space-y-4 ${activeTab === 'payment' ? 'block' : 'hidden'}`}>
+        <div className="bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+          <h2 className="font-bold text-xl mb-4">Payment Information</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-2 font-bold">Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                value={paymentInfo.fullName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Your Full Name"
+                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Account Name</label>
+              <input
+                type="text"
+                name="accountName"
+                value={paymentInfo.accountName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Account Name"
+                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Bank Name</label>
+              <input
+                type="text"
+                name="bankName"
+                value={paymentInfo.bankName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Account Name"
+                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+                />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Promptpay Number</label>
+              <input
+                type="text"
+                name="promptpay"
+                value={paymentInfo.promptpay}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Promptpay Number"
+                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
