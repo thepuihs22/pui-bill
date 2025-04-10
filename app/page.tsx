@@ -35,9 +35,24 @@ export default function Bill() {
     bankName: '',
   });
 
+  // Add new state for error message
+  const [nameError, setNameError] = useState('');
+
   const handleAddPerson = () => {
-    console.log('Adding person:', { newName, newValue });
+    // Clear any previous error
+    setNameError('');
+    
     if (newName) {
+      // Check if name already exists (case insensitive)
+      const nameExists = people.some(
+        person => person.name.toLowerCase() === newName.toLowerCase()
+      );
+
+      if (nameExists) {
+        setNameError('This name already exists!');
+        return;
+      }
+
       setPeople([...people, { 
         name: newName, 
         value: 0
@@ -138,10 +153,21 @@ export default function Bill() {
     setTimeout(() => setShowCopied(false), 2000);
   }, [orders, people]);
 
+  // Add this new handler function
+  const handleToggleAllPeople = () => {
+    if (selectedPeople.length === people.length) {
+      // If all are selected, deselect all
+      setSelectedPeople([]);
+    } else {
+      // Otherwise, select all
+      setSelectedPeople(people.map(person => person.name));
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-4 font-mono">
       <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
-        Calculate your bills
+        Eat & Split
       </h1>
 
       <div className="flex mb-4 gap-2">
@@ -178,20 +204,30 @@ export default function Bill() {
       </div>
 
       <div className={`mb-6 space-y-4 ${activeTab === 'users' ? 'block' : 'hidden'}`} id="bill-user-form">
-        <div className="flex gap-2 bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Name"
-            className="border-2 border-black p-2 rounded bg-white font-mono"
-          />
-          <button
-            onClick={handleAddPerson}
-            className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
-          >
-            Add Person
-          </button>
+        <div className="flex flex-col gap-2 bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => {
+                setNewName(e.target.value);
+                setNameError(''); // Clear error when typing
+              }}
+              placeholder="Name"
+              className={`border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white font-mono`}
+            />
+            <button
+              onClick={handleAddPerson}
+              className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+            >
+              Add Person
+            </button>
+          </div>
+          {nameError && (
+            <div className="text-red-500 text-sm font-bold bg-white p-2 rounded border-2 border-red-500">
+              {nameError}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -207,6 +243,16 @@ export default function Bill() {
             </div>
           ))}
         </div>
+
+        {/* Members Tab Note */}
+        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Add all people who are splitting the bill</li>
+            <li>Each person's name must be unique</li>
+            <li>You can remove people if they haven't been added to any orders</li>
+          </ol>
+        </div>
       </div>
 
       <div className={`mb-6 space-y-4 ${activeTab === 'orders' ? 'block' : 'hidden'}`} id="bill-order-form">
@@ -217,19 +263,36 @@ export default function Bill() {
               value={newOrder}
               onChange={(e) => setNewOrder(e.target.value)}
               placeholder="Order"
-              className="border-2 border-black p-2 rounded bg-white font-mono"
+              className="flex-1 border-2 border-black p-2 rounded bg-white font-mono"
             />
             <input
               type="number"
               value={newOrderValue}
               onChange={(e) => setNewOrderValue(e.target.value)}
               placeholder="Amount"
-              className="border-2 border-black p-2 rounded bg-white font-mono"
+              className="w-32 border-2 border-black p-2 rounded bg-white font-mono"
             />
           </div>
 
           <div className="border-2 border-black p-3 rounded bg-white">
-            <p className="font-bold mb-2">Select people to split with:</p>
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-bold">Select people to split with:</p>
+              <button
+                onClick={handleToggleAllPeople}
+                className="flex items-center gap-1 px-2 py-1 text-sm rounded font-mono border-2 border-black transition-all duration-150 ease-in-out bg-slate-400 hover:shadow-[4px_4px_0px_0px_black]"
+                title={selectedPeople.length === people.length ? "All" : "All"}
+              >
+                {/* Toggle Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  {selectedPeople.length === people.length ? (
+                    <path fillRule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clipRule="evenodd" />
+                  ) : (
+                    <path fillRule="evenodd" d="M10 5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 0110 5z" clipRule="evenodd" />
+                  )}
+                </svg>
+                {selectedPeople.length === people.length ? "All" : "All"}
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {people.map((person, index) => (
                 <button
@@ -261,9 +324,9 @@ export default function Bill() {
             <div key={index} className="bg-slate-400 p-4 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_black]">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="font-bold">{order.name}</p>
+                  <p className="font-bold">{index + 1}. {order.name}</p>
                   <p className="text-black">
-                    Total: {formatNumber(order.value)} ({(formatNumber(order.value / order.selectedPeople.length))}) THB
+                    Total: {formatNumber(order.value)} ({(formatNumber(order.value / order.selectedPeople.length))} THB/Person)
                   </p>
                   <p className="text-black">
                     Split between: {order.selectedPeople.join(', ')}
@@ -332,6 +395,17 @@ export default function Bill() {
             </div>
           </div>
         )}
+
+        {/* Orders Tab Note */}
+        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Enter the order name and total amount</li>
+            <li>Select who's splitting this order (use "All" button to select everyone)</li>
+            <li>The amount will be split equally between selected people</li>
+            <li>Review the summary and share the bill when done</li>
+          </ol>
+        </div>
       </div>
 
       {/* Update the Payment Info Form */}
@@ -385,7 +459,23 @@ export default function Bill() {
             </div>
           </div>
         </div>
+
+        {/* Payment Info Tab Note */}
+        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Fill in your payment details</li>
+            <li>This information will be shown to others when you share the bill</li>
+            <li>All fields are optional, but helpful for receiving payments</li>
+          </ol>
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-8 text-center text-sm text-gray-500 border-t-2 border-black pt-4">
+        <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
+        <p className="mt-1">Made with 💖 by Pui</p>
+      </footer>
     </div>
   );
 }
