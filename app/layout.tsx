@@ -28,22 +28,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex`}
       >
-        <nav className="w-64 bg-gray-100 p-4 border-r">
-          <div className="font-semibold mb-4 text-lg">Menu</div>
-          <ul className="space-y-2">
-            {/* <li>
-              <Link href="/" className="hover:text-blue-600">
-                Home
-              </Link>
-            </li> */}
-            <li>
-              <Link href="/" className="hover:text-blue-600">
-                Bill
-              </Link>
-            </li>
-            {/* Add more menu items as needed */}
-          </ul>
-        </nav>
         <main className="flex-1 p-8">
           {children}
         </main>
