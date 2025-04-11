@@ -164,37 +164,37 @@ export default function Bill() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-4 font-mono">
-      <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+    <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
+      <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
         Eat & Split
       </h1>
 
       <div className="flex mb-4 gap-2">
         <button
-          className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
             activeTab === 'payment'
-              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black]'
-              : 'bg-slate-400 shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black]'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
           }`}
           onClick={() => setActiveTab('payment')}
         >
           Payment Info
         </button>
         <button
-          className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
             activeTab === 'users'
-              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black]'
-              : 'bg-slate-400 shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black]'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
           }`}
           onClick={() => setActiveTab('users')}
         >
           Members
         </button>
         <button
-          className={`py-2 px-4 font-mono border-2 border-black transition-all duration-150 ease-in-out ${
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
             activeTab === 'orders'
-              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black]'
-              : 'bg-slate-400 shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black]'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
           }`}
           onClick={() => setActiveTab('orders')}
         >
@@ -203,7 +203,7 @@ export default function Bill() {
       </div>
 
       <div className={`mb-6 space-y-4 ${activeTab === 'users' ? 'block' : 'hidden'}`} id="bill-user-form">
-        <div className="flex flex-col gap-2 bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+        <div className="flex flex-col gap-2 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
           <div className="flex gap-2">
             <input
               type="text"
@@ -213,7 +213,7 @@ export default function Bill() {
                 setNameError(''); // Clear error when typing
               }}
               placeholder="Name"
-              className={`border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white font-mono`}
+              className={`border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
             />
             <button
               onClick={handleAddPerson}
@@ -231,7 +231,7 @@ export default function Bill() {
 
         <div className="space-y-2">
           {people.map((person, index) => (
-            <div key={index} className="flex justify-between items-center bg-slate-400 p-3 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_black]">
+            <div key={index} className="flex justify-between items-center bg-slate-400 dark:bg-slate-700 p-3 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
               <span className="font-bold">{person.name}</span>
               <button
                 onClick={() => handleRemovePerson(index)}
@@ -244,7 +244,7 @@ export default function Bill() {
         </div>
 
         {/* Members Tab Note */}
-        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Add all people who are splitting the bill</li>
@@ -255,30 +255,30 @@ export default function Bill() {
       </div>
 
       <div className={`mb-6 space-y-4 ${activeTab === 'orders' ? 'block' : 'hidden'}`} id="bill-order-form">
-        <div className="space-y-4 bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+        <div className="space-y-4 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
           <div className="flex gap-2">
             <input
               type="text"
               value={newOrder}
               onChange={(e) => setNewOrder(e.target.value)}
               placeholder="Order"
-              className="flex-1 border-2 border-black p-2 rounded bg-white font-mono"
+              className="flex-1 border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
             />
             <input
               type="number"
               value={newOrderValue}
               onChange={(e) => setNewOrderValue(e.target.value)}
               placeholder="Amount"
-              className="w-32 border-2 border-black p-2 rounded bg-white font-mono"
+              className="w-32 border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
             />
           </div>
 
-          <div className="border-2 border-black p-3 rounded bg-white">
+          <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
             <div className="flex justify-between items-center mb-2">
               <p className="font-bold">Select people to split with:</p>
               <button
                 onClick={handleToggleAllPeople}
-                className="flex items-center gap-1 px-2 py-1 text-sm rounded font-mono border-2 border-black transition-all duration-150 ease-in-out bg-slate-400 hover:shadow-[4px_4px_0px_0px_black]"
+                className="flex items-center gap-1 px-2 py-1 text-sm rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out bg-slate-400 dark:bg-slate-700 hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]"
                 title={selectedPeople.length === people.length ? "All" : "All"}
               >
                 {/* Toggle Icon */}
@@ -297,10 +297,10 @@ export default function Bill() {
                 <button
                   key={index}
                   onClick={() => togglePersonSelection(person.name)}
-                  className={`px-3 py-1 rounded font-mono border-2 border-black transition-all duration-150 ease-in-out ${
+                  className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
                     selectedPeople.includes(person.name)
-                      ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black]'
-                      : 'bg-slate-400 shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black]'
+                      ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                      : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
                   }`}
                 >
                   {person.name}
@@ -320,7 +320,7 @@ export default function Bill() {
 
         <div className="space-y-3 mt-4">
           {orders.map((order, index) => (
-            <div key={index} className="bg-slate-400 p-4 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_black]">
+            <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-bold">{index + 1}. {order.name}</p>
@@ -343,7 +343,7 @@ export default function Bill() {
         </div>
 
         {orders.length > 0 && (
-          <div className="mt-6 p-4 bg-slate-400 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+          <div className="mt-6 p-4 bg-slate-400 dark:bg-slate-700 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-bold text-xl">Summary</h2>
               <div className="flex gap-2">
@@ -396,7 +396,7 @@ export default function Bill() {
         )}
 
         {/* Orders Tab Note */}
-        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Enter the order name and total amount</li>
@@ -409,7 +409,7 @@ export default function Bill() {
 
       {/* Update the Payment Info Form */}
       <div className={`mb-6 space-y-4 ${activeTab === 'payment' ? 'block' : 'hidden'}`}>
-        <div className="bg-slate-400 p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black]">
+        <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
           <h2 className="font-bold text-xl mb-4">Payment Information</h2>
           <div className="space-y-4">
             <div>
@@ -420,7 +420,7 @@ export default function Bill() {
                 value={paymentInfo.fullName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Your Full Name"
-                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
               />
             </div>
             <div>
@@ -431,7 +431,7 @@ export default function Bill() {
                 value={paymentInfo.accountName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Account Name"
-                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
               />
             </div>
             <div>
@@ -442,7 +442,7 @@ export default function Bill() {
                 value={paymentInfo.bankName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Account Name"
-                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
                 />
             </div>
             <div>
@@ -453,14 +453,14 @@ export default function Bill() {
                 value={paymentInfo.promptpay}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Promptpay Number"
-                className="w-full border-2 border-black p-2 rounded bg-white font-mono"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
               />
             </div>
           </div>
         </div>
 
         {/* Payment Info Tab Note */}
-        <div className="bg-yellow-100 p-4 border-2 border-black rounded-md">
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Fill in your payment details</li>
@@ -471,7 +471,7 @@ export default function Bill() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-8 text-center text-sm text-gray-500 border-t-2 border-black pt-4">
+      <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
         <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
         <p className="mt-1">Made with 💖 by Pui</p>
       </footer>
