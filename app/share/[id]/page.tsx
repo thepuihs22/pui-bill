@@ -1,24 +1,29 @@
 "use client";
 
-import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
-// import qrCode from '../../../public/img/qr.jpg';
-
-interface Order {
-  name: string;
-  value: number;
-  selectedPeople: string[];
-}
+import { useEffect, useState } from 'react';
+import { use } from 'react';
 
 interface ShareData {
-  orders: Order[];
-  people: { name: string; value: number }[];
+  orders: {
+    name: string;
+    value: number;
+    selectedPeople: string[];
+    payer: string;
+  }[];
+  people: {
+    name: string;
+    paid: number;
+    owes: number;
+    balance: number;
+  }[];
   paymentInfo: {
     accountName: string;
     promptpay: string;
     fullName: string;
     bankName: string;
   };
+  totalAmount: number;
+  timestamp: string;
 }
 
 const formatNumber = (num: number) => {
@@ -27,93 +32,111 @@ const formatNumber = (num: number) => {
   }).format(Math.round(num));
 };
 
-export default function SharePage() {
-  const params = useParams();
-  const [data, setData] = useState<ShareData | null>(null);
+export default function SharePage({ params }: { params: { id: string } }) {
+  const shareId = use(params).id;
+  const [shareData, setShareData] = useState<ShareData | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    try {
-      // Decode URL-safe base64 data
-      const decodedData = JSON.parse(atob(decodeURIComponent(params.id as string)));
-      setData(decodedData);
-    } catch (err) {
-      console.error('Error decoding share data:', err);
-      setError('Invalid or expired share link');
-    }
-  }, [params.id]);
+    const fetchShareData = async () => {
+      try {
+        const response = await fetch(`/api/share?id=${shareId}`);
+        if (!response.ok) {
+          throw new Error('Share not found');
+        }
+        const data = await response.json();
+        setShareData(data);
+      } catch (e) {
+        setError('Invalid share link');
+      }
+    };
 
-  if (error || !data) {
+    fetchShareData();
+  }, [shareId]);
+
+  if (error) {
     return (
-      <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
-        <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
-          <h1 className="text-xl font-bold text-center">
-            {error || 'Bill not found'}
-          </h1>
-        </div>
+      <div className="max-w-lg mx-auto p-4 text-center">
+        <h1 className="text-red-500 text-xl">{error}</h1>
+      </div>
+    );
+  }
+
+  if (!shareData) {
+    return (
+      <div className="max-w-lg mx-auto p-4 text-center">
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
     <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
-      <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
-        <h1 className="text-2xl font-bold mb-6 text-center">Bill Summary</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+        Bill Summary
+      </h1>
 
-        <div className="space-y-4 mt-6">
-          <h2 className="font-bold text-xl mb-3">Orders</h2>
-          {data.orders.map((order, index) => (
-            <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
+      {/* Payment Information */}
+      {shareData.paymentInfo && Object.values(shareData.paymentInfo).some(value => value) && (
+        <div className="mb-6 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+          <h2 className="font-bold text-xl mb-4">Payment Information</h2>
+          {shareData.paymentInfo.fullName && (
+            <p><strong>Full Name:</strong> {shareData.paymentInfo.fullName}</p>
+          )}
+          {shareData.paymentInfo.accountName && (
+            <p><strong>Account Name:</strong> {shareData.paymentInfo.accountName}</p>
+          )}
+          {shareData.paymentInfo.bankName && (
+            <p><strong>Bank Name:</strong> {shareData.paymentInfo.bankName}</p>
+          )}
+          {shareData.paymentInfo.promptpay && (
+            <p><strong>Promptpay:</strong> {shareData.paymentInfo.promptpay}</p>
+          )}
+        </div>
+      )}
+
+      {/* Orders List */}
+      <div className="mb-6">
+        <h2 className="font-bold text-xl mb-4">Orders</h2>
+        <div className="space-y-3">
+          {shareData.orders.map((order, index) => (
+            <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
               <p className="font-bold">{index + 1}. {order.name}</p>
-              <p className="text-black dark:text-white">
-                Total: {formatNumber(order.value)} ({formatNumber(order.value / order.selectedPeople.length)}) THB
-              </p>
-              <p className="text-black dark:text-white">
-                Split between: {order.selectedPeople.join(', ')}
+              <p>Amount: {formatNumber(order.value)} THB</p>
+              <p>Paid by: {order.payer}</p>
+              <p>Split between: {order.selectedPeople.join(', ')}</p>
+              <p>Per person: {formatNumber(order.value / order.selectedPeople.length)} THB</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+        <h2 className="font-bold text-xl mb-4">Final Summary</h2>
+        <p className="font-bold text-lg border-b-2 border-black pb-2 mb-4">
+          Total Bill: {formatNumber(shareData.totalAmount)} THB
+        </p>
+        
+        <div className="space-y-4">
+          {shareData.people.map((person) => (
+            <div key={person.name} className="border-b border-black dark:border-white py-2">
+              <p className="font-bold">{person.name}</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <p>Paid: {formatNumber(person.paid)} THB</p>
+                <p>Owes: {formatNumber(person.owes)} THB</p>
+              </div>
+              <p className={`font-bold ${person.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                Balance: {formatNumber(person.balance)} THB
+                ({person.balance >= 0 ? 'to receive' : 'to pay'})
               </p>
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="mt-6">
-          <h2 className="font-bold text-xl mb-3">Summary</h2>
-          <p className="font-bold text-lg border-b-2 border-black dark:border-white pb-2 flex justify-between">
-            <span>Total Orders:</span>
-            <span>{formatNumber(data.orders.reduce((sum, order) => sum + order.value, 0))} THB</span>
-          </p>
-          <div className="mt-3 space-y-2">
-            {data.people.map((person) => {
-              const personTotal = data.orders.reduce((sum, order) => {
-                if (order.selectedPeople.includes(person.name)) {
-                  return sum + (order.value / order.selectedPeople.length);
-                }
-                return sum;
-              }, 0);
-              return (
-                <p key={person.name} className="font-mono flex justify-between items-center">
-                  <span>{person.name}</span>
-                  <span>{formatNumber(personTotal)} THB</span>
-                </p>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 pt-4 border-t-2 border-black">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-              <h3 className="font-bold text-lg mb-3 text-center">Payment Information</h3>
-              <p className="text-center mb-4">
-                Please transfer to:<br />
-                <span className="font-bold">{data.paymentInfo?.fullName || '-'}</span><br />
-                Account Name: <span className="font-bold">{data.paymentInfo?.accountName || '-'}</span><br />
-                Bank Name: <span className="font-bold">{data.paymentInfo?.bankName || '-'}</span><br />
-                Promptpay: <span className="font-bold">{data.paymentInfo?.promptpay || '-'}</span>
-              </p>
-              <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
-                After transferring, please send a screenshot to confirm your payment
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="mt-4 text-sm text-center text-gray-500">
+        Generated on: {new Date(shareData.timestamp).toLocaleString()}
       </div>
     </div>
   );
