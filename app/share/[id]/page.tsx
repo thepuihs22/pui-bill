@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 
 interface ShareData {
   orders: {
@@ -32,27 +31,37 @@ const formatNumber = (num: number) => {
   }).format(Math.round(num));
 };
 
-export default function SharePage({ params }: { params: { id: string } }) {
-  const shareId = use(params).id;
+// interface PageProps {
+//   params: {
+//     id: string;
+//   };
+// }
+
+type PageProps = {
+  params: Promise<{ id: string }>; // 👈 make this a Promise
+};
+
+export default function SharePage({ params }: PageProps) {
+  const { id } = use(params);
   const [shareData, setShareData] = useState<ShareData | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const fetchShareData = async () => {
       try {
-        const response = await fetch(`/api/share?id=${shareId}`);
+        const response = await fetch(`/api/share?id=${id}`);
         if (!response.ok) {
           throw new Error('Share not found');
         }
         const data = await response.json();
         setShareData(data);
-      } catch (e) {
+      } catch {
         setError('Invalid share link');
       }
     };
 
     fetchShareData();
-  }, [shareId]);
+  }, [id]);
 
   if (error) {
     return (

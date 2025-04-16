@@ -1,23 +1,33 @@
 import { nanoid } from 'nanoid';
+import { NextResponse } from 'next/server';
+
+interface SharePayload {
+    // adjust these fields to match your real payload structure
+    name: string;
+    items: { label: string; amount: number }[];
+  }
 
 // In-memory storage (replace with your database in production)
-const shareStorage = new Map<string, any>();
+const shareStorage = new Map<string, SharePayload>();
 
 export async function POST(request: Request) {
-  try {
-    const data = await request.json();
-    const shareId = nanoid(10); // Generates a 10-character unique ID
-    shareStorage.set(shareId, data);
-
-    // Remove old data after 24 hours
-    setTimeout(() => {
-      shareStorage.delete(shareId);
-    }, 24 * 60 * 60 * 1000);
-
-    return Response.json({ shareId });
-  } catch (error) {
-    return Response.json({ error: 'Invalid data' }, { status: 400 });
-  }
+    try {
+        const data = (await request.json()) as SharePayload;
+    
+        const shareId = nanoid(10);
+        shareStorage.set(shareId, data);
+    
+        // Delete after 24 hours
+        setTimeout(() => {
+          shareStorage.delete(shareId);
+        }, 24 * 60 * 60 * 1000);
+    
+        return Response.json({ shareId });
+      } catch (error: unknown) {
+        console.error('Error sharing bill:', error);
+        return NextResponse.json({ message: 'Error' }, { status: 500 });
+      }
+    
 }
 
 export async function GET(request: Request) {
