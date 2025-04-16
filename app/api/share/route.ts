@@ -2,10 +2,27 @@ import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 
 interface SharePayload {
-    // adjust these fields to match your real payload structure
+  orders: {
     name: string;
-    items: { label: string; amount: number }[];
-  }
+    value: number;
+    selectedPeople: string[];
+    payer: string;
+  }[];
+  people: {
+    name: string;
+    paid: number;
+    owes: number;
+    balance: number;
+  }[];
+  paymentInfo: {
+    accountName: string;
+    promptpay: string;
+    fullName: string;
+    bankName: string;
+  };
+  totalAmount: number;
+  timestamp: string;
+}
 
 // In-memory storage (replace with your database in production)
 const shareStorage = new Map<string, SharePayload>();
