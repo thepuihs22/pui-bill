@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { toast } from 'react-hot-toast';
 
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
@@ -8,6 +10,12 @@ const formatNumber = (num: number) => {
     maximumFractionDigits: 0
   }).format(Math.round(num));
 };
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function Bill() {
   const [people, setPeople] = useState<{ name: string; value: number }[]>([]);
@@ -41,31 +49,116 @@ export default function Bill() {
   // Add new state for error message
   const [nameError, setNameError] = useState('');
 
-  // Load data from localStorage on component mount
+  const [currentBillId, setCurrentBillId] = useState<string | null>(null);
+
   useEffect(() => {
-    const savedData = localStorage.getItem('billData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setPeople(parsedData.people || []);
-      setOrders(parsedData.orders || []);
-      setPaymentInfo(parsedData.paymentInfo || {
-        accountName: '',
-        promptpay: '',
-        fullName: '',
-        bankName: '',
-      });
-    }
+    const loadBillData = async () => {
+      // Check URL for share ID
+      const urlParams = new URLSearchParams(window.location.search);
+      const shareId = urlParams.get('id');
+
+      if (shareId) {
+        // Try to load shared bill data
+        try {
+          const response = await fetch(`/api/share?id=${shareId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setPeople(data.people || []);
+            setOrders(data.orders || []);
+            setPaymentInfo(data.payment_info || {
+              accountName: '',
+              promptpay: '',
+              fullName: '',
+              bankName: '',
+            });
+            setCurrentBillId(shareId);
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading shared bill:', error);
+        }
+      }
+
+      // Check for existing empty bill
+      const { data: existingBills, error: fetchError } = await supabase
+        .from('shared_bills')
+        .select('*')
+        .eq('people', '[]')  // Check for empty array instead of null
+        .eq('orders', '[]')  // Check for empty array instead of null
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!fetchError && existingBills) {
+        console.log('Found existing empty bill:', existingBills.id);
+        setCurrentBillId(existingBills.id);
+        setPeople([]);
+        setOrders([]);
+        setPaymentInfo({
+          accountName: '',
+          promptpay: '',
+          fullName: '',
+          bankName: '',
+        });
+        return;
+      }
+
+      // If no empty bill exists, create a new one
+      console.log('Creating new bill...');
+      const { data, error } = await supabase
+        .from('shared_bills')
+        .insert({
+          people: [],
+          orders: [],
+          payment_info: {
+            accountName: '',
+            promptpay: '',
+            fullName: '',
+            bankName: '',
+          },
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating new bill:', error);
+        return;
+      }
+
+      setCurrentBillId(data.id);
+    };
+
+    loadBillData();
   }, []);
 
-  // Save data to localStorage whenever it changes
+  // Replace the save effect with an update function
   useEffect(() => {
-    const dataToSave = {
-      people,
-      orders,
-      paymentInfo
+    const updateBillData = async () => {
+      if (!currentBillId || (people.length === 0 && orders.length === 0)) return;
+
+      const { error } = await supabase
+        .from('shared_bills')
+        .update({
+          people,
+          orders,
+          payment_info: paymentInfo,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentBillId);
+
+      if (error) {
+        console.error('Error updating bill data:', error);
+        toast.error('Failed to save changes');
+      }
     };
-    localStorage.setItem('billData', JSON.stringify(dataToSave));
-  }, [people, orders, paymentInfo]);
+
+    // Debounce the update operation
+    const timeoutId = setTimeout(updateBillData, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [people, orders, paymentInfo, currentBillId]);
 
   const handleAddPerson = () => {
     // Clear any previous error
@@ -157,60 +250,28 @@ export default function Bill() {
     }));
   };
 
-  // Update handleShare to use the new API
-  const handleShare = useCallback(async () => {
-    const calculatePersonBalance = (personName: string) => {
-      const personOwes = orders.reduce((sum, order) => {
-        if (order.selectedPeople.includes(personName)) {
-          return sum + (order.value / order.selectedPeople.length);
-        }
-        return sum;
-      }, 0);
+  // Add calculateTotal function
+  const calculateTotal = () => {
+    return orders.reduce((sum, order) => sum + (order.value || 0), 0);
+  };
 
-      const personPaid = orders.reduce((sum, order) => {
-        if (order.payer === personName) {
-          return sum + order.value;
-        }
-        return sum;
-      }, 0);
-
-      return {
-        paid: personPaid,
-        owes: personOwes,
-        balance: personPaid - personOwes
-      };
-    };
-
-    const shareData = {
-      orders,
-      people: people.map(person => ({
-        ...person,
-        ...calculatePersonBalance(person.name)
-      })),
-      paymentInfo,
-      totalAmount: orders.reduce((sum, order) => sum + order.value, 0),
-      timestamp: new Date().toISOString()
-    };
+  const handleShare = async () => {
+    if (!currentBillId) return;
 
     try {
-      const response = await fetch('/api/share', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(shareData),
-      });
+      const shareUrl = `${window.location.origin}/share/${currentBillId}`;
       
-      const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/share/${shareId}`;
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Share link copied to clipboard!');
       
-      navigator.clipboard.writeText(shareUrl);
+      // Open in new tab
       window.open(shareUrl, '_blank');
     } catch (error) {
       console.error('Error sharing bill:', error);
-      // You might want to show an error message to the user
+      toast.error('Failed to generate share link');
     }
-  }, [orders, people, paymentInfo]);
+  };
 
   // Update handleCopyLink similarly
   const handleCopyLink = useCallback(async () => {

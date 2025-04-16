@@ -1,5 +1,11 @@
-import { nanoid } from 'nanoid';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface SharePayload {
   orders: {
@@ -24,41 +30,56 @@ interface SharePayload {
   timestamp: string;
 }
 
-// In-memory storage (replace with your database in production)
-const shareStorage = new Map<string, SharePayload>();
-
 export async function POST(request: Request) {
-    try {
-        const data = (await request.json()) as SharePayload;
+  try {
+    const data = (await request.json()) as SharePayload;
     
-        const shareId = nanoid(10);
-        shareStorage.set(shareId, data);
+    // Insert data into Supabase and get the generated UUID
+    const { data: insertedData, error } = await supabase
+      .from('shared_bills')
+      .insert({
+        ...data,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
     
-        // Delete after 24 hours
-        setTimeout(() => {
-          shareStorage.delete(shareId);
-        }, 24 * 60 * 60 * 1000);
-    
-        return Response.json({ shareId });
-      } catch (error: unknown) {
-        console.error('Error sharing bill:', error);
-        return NextResponse.json({ message: 'Error' }, { status: 500 });
-      }
-    
+    return Response.json({ shareId: insertedData.id });
+  } catch (error: unknown) {
+    console.error('Error sharing bill:', error);
+    return NextResponse.json({ message: 'Error sharing bill' }, { status: 500 });
+  }
 }
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const id = url.searchParams.get('id');
-  
-  if (!id) {
-    return Response.json({ error: 'No ID provided' }, { status: 400 });
-  }
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    if (!id) {
+      return Response.json({ error: 'No ID provided' }, { status: 400 });
+    }
 
-  const data = shareStorage.get(id);
-  if (!data) {
-    return Response.json({ error: 'Share not found' }, { status: 404 });
-  }
+    const { data, error } = await supabase
+      .from('shared_bills')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  return Response.json(data);
+    if (error || !data) {
+      return Response.json({ error: 'Share not found' }, { status: 404 });
+    }
+
+    // Check if the share has expired
+    if (new Date(data.expires_at) < new Date()) {
+      return Response.json({ error: 'Share has expired' }, { status: 410 });
+    }
+
+    return Response.json(data);
+  } catch (error: unknown) {
+    console.error('Error fetching shared bill:', error);
+    return NextResponse.json({ message: 'Error fetching shared bill' }, { status: 500 });
+  }
 } 
