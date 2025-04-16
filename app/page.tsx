@@ -251,9 +251,9 @@ export default function Bill() {
   };
 
   // Add calculateTotal function
-  const calculateTotal = () => {
-    return orders.reduce((sum, order) => sum + (order.value || 0), 0);
-  };
+  // const calculateTotal = () => {
+  //   return orders.reduce((sum, order) => sum + (order.value || 0), 0);
+  // };
 
   const handleShare = async () => {
     if (!currentBillId) return;

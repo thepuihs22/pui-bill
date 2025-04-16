@@ -1,30 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import Link from 'next/link';
+
+interface Order {
+  name: string;
+  value: number;
+  payer: string;
+  selectedPeople: string[];
+}
+
+interface Person {
+  name: string;
+  paid: number;
+  owes: number;
+  balance: number;
+}
 
 interface ShareData {
-  orders: {
-    name: string;
-    value: number;
-    selectedPeople: string[];
-    payer: string;
-  }[];
-  people: {
-    name: string;
-    paid: number;
-    owes: number;
-    balance: number;
-  }[];
-  paymentInfo: {
-    accountName: string;
-    promptpay: string;
-    fullName: string;
-    bankName: string;
+  orders: Order[];
+  people: Person[];
+  paymentInfo?: {
+    fullName?: string;
+    accountName?: string;
+    bankName?: string;
+    promptpay?: string;
   };
   totalAmount: number;
-  timestamp: string;
+  timestamp: number;
 }
 
 const formatNumber = (num: number) => {
@@ -33,27 +40,25 @@ const formatNumber = (num: number) => {
   }).format(Math.round(num));
 };
 
-function calculateTotalAmount(orders: any[]) {
+function calculateTotalAmount(orders: Order[]): number {
   return orders.reduce((total, order) => total + order.value, 0);
 }
 
-function calculatePersonalSummary(person: string, orders: any[]) {
+function calculatePersonalSummary(person: string, orders: Order[]): Person {
   let paid = 0;
   let owes = 0;
 
   orders.forEach(order => {
-    // Calculate what they paid
     if (order.payer === person) {
       paid += order.value;
     }
-
-    // Calculate what they owe
     if (order.selectedPeople.includes(person)) {
       owes += order.value / order.selectedPeople.length;
     }
   });
 
   return {
+    name: person,
     paid,
     owes,
     balance: paid - owes
@@ -64,7 +69,7 @@ export default function SharedBill() {
   const params = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [shareData, setShareData] = useState<any>(null);
+  const [shareData, setShareData] = useState<ShareData | null>(null);
 
   useEffect(() => {
     const loadSharedBill = async () => {
@@ -109,15 +114,36 @@ export default function SharedBill() {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen">
         <h1 className="text-2xl font-bold text-red-500">{error}</h1>
-        <a href="/" className="mt-4 text-blue-500 hover:underline">
+        <Link 
+          href="/" 
+          className="mt-4 text-blue-500 hover:underline"
+        >
           Create New Bill
-        </a>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!shareData) {
+    return (
+      <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+          Bill Not Found
+        </h1>
+        <div className="text-center">
+          <Link 
+            href="/" 
+            className="inline-block bg-slate-400 dark:bg-slate-700 px-6 py-2 border-2 border-black dark:border-white rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all"
+          >
+            Create New Bill
+          </Link>
+        </div>
       </div>
     );
   }
 
   const totalAmount = calculateTotalAmount(shareData.orders);
-  const peopleWithCalculatedValues = shareData.people.map((person: any) => {
+  const peopleWithCalculatedValues = shareData.people.map((person: Person) => {
     const calculations = calculatePersonalSummary(person.name, shareData.orders);
     return {
       name: person.name,
@@ -156,7 +182,7 @@ export default function SharedBill() {
       <div className="mb-6">
         <h2 className="font-bold text-xl mb-4">Orders</h2>
         <div className="space-y-3">
-          {shareData.orders.map((order: any, index: number) => (
+          {shareData.orders.map((order: Order, index: number) => (
             <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
               <p className="font-bold">{index + 1}. {order.name}</p>
               <p>Amount: {formatNumber(order.value)} THB</p>
@@ -176,7 +202,7 @@ export default function SharedBill() {
         </p>
         
         <div className="space-y-4">
-          {peopleWithCalculatedValues.map((person: any) => (
+          {peopleWithCalculatedValues.map((person: Person) => (
             <div key={person.name} className="border-b border-black dark:border-white py-2">
               <p className="font-bold">{person.name}</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -197,12 +223,12 @@ export default function SharedBill() {
       </div>
 
       <div className="mt-6 text-center">
-        <a 
+        <Link 
           href="/" 
           className="inline-block bg-slate-400 dark:bg-slate-700 px-6 py-2 border-2 border-black dark:border-white rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all"
         >
           Create New Bill
-        </a>
+        </Link>
       </div>
     </div>
   );
