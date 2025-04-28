@@ -74,33 +74,43 @@ export default function Bill() {
   useEffect(() => {
     const initializeFromLocalStorage = async () => {
       setIsClient(true);
-      // Initialize isSaveEnabled from localStorage
+      // Always set isSaveEnabled to true on first load
+      setIsSaveEnabled(true);
+      
+      // Check for saved bill ID
       const savedShareId = localStorage.getItem('billShareId');
+      console.log('savedShareId', savedShareId);
+      
       if (savedShareId) {
-        setIsSaveEnabled(true);
-        // Load saved bill data
+        // If we have a saved bill ID, load the data
         try {
           const response = await fetch(`/api/share?id=${savedShareId}`);
           if (response.ok) {
             const data = await response.json();
-            setPeople(data.people || []);
-            setOrders(data.orders || []);
-            setPaymentInfo(data.payment_info || {
-              accountName: '',
-              promptpay: '',
-              fullName: '',
-              bankName: '',
-            });
-            setCurrentBillId(savedShareId);
+            console.log('data', data);
+            if (data && data.people && data.orders) {
+              setPeople(data.people || []);
+              setOrders(data.orders || []);
+              setPaymentInfo(data.payment_info || {
+                accountName: '',
+                promptpay: '',
+                fullName: '',
+                bankName: '',
+              });
+              setCurrentBillId(savedShareId);
+            } else {
+              // If data is invalid, clear localStorage
+              localStorage.removeItem('billShareId');
+            }
+          } else {
+            // If response is not ok, clear localStorage
+            localStorage.removeItem('billShareId');
           }
         } catch (error) {
           console.error('Error loading saved bill:', error);
           // If there's an error loading the saved bill, clear the localStorage
           localStorage.removeItem('billShareId');
-          setIsSaveEnabled(false);
         }
-      } else {
-        setIsSaveEnabled(false);
       }
     };
 
@@ -112,13 +122,13 @@ export default function Bill() {
       // Only proceed if we're on the client side
       if (!isClient) return;
 
-      // If we have a saved bill and auto-save is enabled, don't load new data
-      if (isSaveEnabled && currentBillId) return;
+      // If we have a current bill ID, don't create a new one
+      if (currentBillId) return;
 
       // Check if save is enabled and get shareId from localStorage
       const savedShareId = localStorage.getItem('billShareId');
       
-      if (savedShareId && isSaveEnabled) {
+      if (savedShareId) {
         // Try to load shared bill data
         try {
           const response = await fetch(`/api/share?id=${savedShareId}`);
@@ -167,60 +177,62 @@ export default function Bill() {
         }
       }
 
-      // Check for existing empty bill
-      const { data: existingBills, error: fetchError } = await supabase
-        .from('shared_bills')
-        .select('*')
-        .eq('people', '[]')
-        .eq('orders', '[]')
-        .eq('payment_info', '{}')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Check for existing empty bill only if we don't have a current bill ID
+      if (!currentBillId) {
+        const { data: existingBills, error: fetchError } = await supabase
+          .from('shared_bills')
+          .select('*')
+          .eq('people', '[]')
+          .eq('orders', '[]')
+          .eq('payment_info', '{}')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (!fetchError && existingBills) {
-        console.log('Found existing empty bill:', existingBills.id);
-        setCurrentBillId(existingBills.id);
-        setPeople([]);
-        setOrders([]);
-        setPaymentInfo({
-          accountName: '',
-          promptpay: '',
-          fullName: '',
-          bankName: '',
-        });
-        return;
-      }
-
-      // If no empty bill exists, create a new one
-      console.log('Creating new bill...');
-      const { data, error } = await supabase
-        .from('shared_bills')
-        .insert({
-          people: [],
-          orders: [],
-          payment_info: {
+        if (!fetchError && existingBills) {
+          console.log('Found existing empty bill:', existingBills.id);
+          setCurrentBillId(existingBills.id);
+          setPeople([]);
+          setOrders([]);
+          setPaymentInfo({
             accountName: '',
             promptpay: '',
             fullName: '',
             bankName: '',
-          },
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+          });
+          return;
+        }
 
-      if (error) {
-        console.error('Error creating new bill:', error);
-        return;
+        // If no empty bill exists, create a new one
+        console.log('Creating new bill...');
+        const { data, error } = await supabase
+          .from('shared_bills')
+          .insert({
+            people: [],
+            orders: [],
+            payment_info: {
+              accountName: '',
+              promptpay: '',
+              fullName: '',
+              bankName: '',
+            },
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating new bill:', error);
+          return;
+        }
+
+        setCurrentBillId(data.id);
       }
-
-      setCurrentBillId(data.id);
     };
 
     loadBillData();
-  }, [isClient, isSaveEnabled]);
+  }, [isClient, currentBillId]);
 
   // Replace the save effect with an update function
   useEffect(() => {
@@ -487,13 +499,23 @@ export default function Bill() {
     setIsSaveEnabled(newSaveState);
     
     if (newSaveState && currentBillId) {
+      // Save the current state to localStorage
       localStorage.setItem('billShareId', currentBillId);
+      // Also save the current data to the database
+      handleSave();
     } else {
       localStorage.removeItem('billShareId');
     }
   };
 
-  // Add save handler
+  // Add effect to save billShareId to localStorage when currentBillId changes
+  useEffect(() => {
+    if (isClient && isSaveEnabled && currentBillId) {
+      localStorage.setItem('billShareId', currentBillId);
+    }
+  }, [currentBillId, isSaveEnabled, isClient]);
+
+  // Modify handleSave to return a promise
   const handleSave = async () => {
     if (!currentBillId) return;
     
@@ -513,12 +535,18 @@ export default function Bill() {
       if (error) {
         console.error('Error saving bill:', error);
         toast.error('Failed to save changes');
+        // If save fails, disable auto-save
+        setIsSaveEnabled(false);
+        localStorage.removeItem('billShareId');
       } else {
         toast.success('Changes saved successfully');
       }
     } catch (error) {
       console.error('Error saving bill:', error);
       toast.error('Failed to save changes');
+      // If save fails, disable auto-save
+      setIsSaveEnabled(false);
+      localStorage.removeItem('billShareId');
     } finally {
       setIsSaving(false);
     }
