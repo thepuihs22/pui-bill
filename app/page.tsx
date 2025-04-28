@@ -21,6 +21,8 @@ export default function Bill() {
   const [people, setPeople] = useState<{ name: string; value: number }[]>([]);
   const [newName, setNewName] = useState('');
   const [activeTab, setActiveTab] = useState('payment');
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Add new states for orders
   const [orders, setOrders] = useState<{
@@ -51,9 +53,95 @@ export default function Bill() {
 
   const [currentBillId, setCurrentBillId] = useState<string | null>(null);
 
+  // Add new state for editing
+  const [editingOrder, setEditingOrder] = useState<{
+    index: number;
+    name: string;
+    value: number;
+    selectedPeople: string[];
+    payer: string;
+  } | null>(null);
+  const [editOrderName, setEditOrderName] = useState('');
+  const [editOrderValue, setEditOrderValue] = useState('');
+  const [editSelectedPeople, setEditSelectedPeople] = useState<string[]>([]);
+  const [editSelectedPayer, setEditSelectedPayer] = useState('');
+  const [editNameError, setEditNameError] = useState('');
+
+  // Add new state for save button
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Add useEffect for client-side initialization
+  useEffect(() => {
+    const initializeFromLocalStorage = async () => {
+      setIsClient(true);
+      // Initialize isSaveEnabled from localStorage
+      const savedShareId = localStorage.getItem('billShareId');
+      if (savedShareId) {
+        setIsSaveEnabled(true);
+        // Load saved bill data
+        try {
+          const response = await fetch(`/api/share?id=${savedShareId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setPeople(data.people || []);
+            setOrders(data.orders || []);
+            setPaymentInfo(data.payment_info || {
+              accountName: '',
+              promptpay: '',
+              fullName: '',
+              bankName: '',
+            });
+            setCurrentBillId(savedShareId);
+          }
+        } catch (error) {
+          console.error('Error loading saved bill:', error);
+          // If there's an error loading the saved bill, clear the localStorage
+          localStorage.removeItem('billShareId');
+          setIsSaveEnabled(false);
+        }
+      } else {
+        setIsSaveEnabled(false);
+      }
+    };
+
+    initializeFromLocalStorage();
+  }, []);
+
   useEffect(() => {
     const loadBillData = async () => {
-      // Check URL for share ID
+      // Only proceed if we're on the client side
+      if (!isClient) return;
+
+      // If we have a saved bill and auto-save is enabled, don't load new data
+      if (isSaveEnabled && currentBillId) return;
+
+      // Check if save is enabled and get shareId from localStorage
+      const savedShareId = localStorage.getItem('billShareId');
+      
+      if (savedShareId && isSaveEnabled) {
+        // Try to load shared bill data
+        try {
+          const response = await fetch(`/api/share?id=${savedShareId}`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('data', data);
+            setPeople(data.people || []);
+            setOrders(data.orders || []);
+            setPaymentInfo(data.payment_info || {
+              accountName: '',
+              promptpay: '',
+              fullName: '',
+              bankName: '',
+            });
+            setCurrentBillId(savedShareId);
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading shared bill:', error);
+        }
+      }
+
+      // If no saved data or save is disabled, proceed with normal flow
       const urlParams = new URLSearchParams(window.location.search);
       const shareId = urlParams.get('id');
 
@@ -83,8 +171,9 @@ export default function Bill() {
       const { data: existingBills, error: fetchError } = await supabase
         .from('shared_bills')
         .select('*')
-        .eq('people', '[]')  // Check for empty array instead of null
-        .eq('orders', '[]')  // Check for empty array instead of null
+        .eq('people', '[]')
+        .eq('orders', '[]')
+        .eq('payment_info', '{}')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -116,7 +205,7 @@ export default function Bill() {
             fullName: '',
             bankName: '',
           },
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           updated_at: new Date().toISOString()
         })
         .select()
@@ -131,7 +220,7 @@ export default function Bill() {
     };
 
     loadBillData();
-  }, []);
+  }, [isClient, isSaveEnabled]);
 
   // Replace the save effect with an update function
   useEffect(() => {
@@ -340,6 +429,101 @@ export default function Bill() {
     }
   };
 
+  // Add function to handle order edit
+  const handleEditOrder = (index: number) => {
+    const order = orders[index];
+    setEditingOrder({
+      index,
+      name: order.name,
+      value: order.value,
+      selectedPeople: [...order.selectedPeople],
+      payer: order.payer
+    });
+    setEditOrderName(order.name);
+    setEditOrderValue(order.value.toString());
+    setEditSelectedPeople([...order.selectedPeople]);
+    setEditSelectedPayer(order.payer);
+    setEditNameError('');
+  };
+
+  // Add function to save edited order
+  const handleSaveEdit = () => {
+    if (!editingOrder) return;
+
+    // Check for duplicate order names (excluding the current order)
+    const nameExists = orders.some(
+      (order, index) => 
+        index !== editingOrder.index && 
+        order.name.toLowerCase() === editOrderName.toLowerCase()
+    );
+
+    if (nameExists) {
+      setEditNameError('This order name already exists!');
+      return;
+    }
+
+    const updatedOrders = [...orders];
+    updatedOrders[editingOrder.index] = {
+      name: editOrderName,
+      value: parseFloat(editOrderValue),
+      selectedPeople: [...editSelectedPeople],
+      payer: editSelectedPayer
+    };
+
+    setOrders(updatedOrders);
+    setEditingOrder(null);
+    setEditOrderName('');
+    setEditOrderValue('');
+    setEditSelectedPeople([]);
+    setEditSelectedPayer('');
+    setEditNameError('');
+  };
+
+  // Modify handleToggleSave to handle localStorage safely
+  const handleToggleSave = () => {
+    if (!isClient) return;
+    
+    const newSaveState = !isSaveEnabled;
+    setIsSaveEnabled(newSaveState);
+    
+    if (newSaveState && currentBillId) {
+      localStorage.setItem('billShareId', currentBillId);
+    } else {
+      localStorage.removeItem('billShareId');
+    }
+  };
+
+  // Add save handler
+  const handleSave = async () => {
+    if (!currentBillId) return;
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('shared_bills')
+        .update({
+          people,
+          orders,
+          payment_info: paymentInfo,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentBillId);
+
+      if (error) {
+        console.error('Error saving bill:', error);
+        toast.error('Failed to save changes');
+      } else {
+        toast.success('Changes saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving bill:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
       <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
@@ -528,16 +712,128 @@ export default function Bill() {
                     Split between: {order.selectedPeople.join(', ')}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleRemoveOrder(index)}
-                  className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
-                >
-                  Remove
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditOrder(index)}
+                    className="bg-blue-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleRemoveOrder(index)}
+                    className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Edit Order Modal */}
+        {editingOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
+              <h2 className="text-2xl font-bold mb-4">Edit Order</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    value={editOrderName}
+                    onChange={(e) => {
+                      setEditOrderName(e.target.value);
+                      setEditNameError('');
+                    }}
+                    placeholder="Order Name"
+                    className={`w-full border-2 ${editNameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+                  />
+                  {editNameError && (
+                    <div className="text-red-500 text-sm mt-1">{editNameError}</div>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    type="number"
+                    value={editOrderValue}
+                    onChange={(e) => setEditOrderValue(e.target.value)}
+                    placeholder="Amount"
+                    className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+                  />
+                </div>
+
+                <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+                  <p className="font-bold mb-2">Select people to split with:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {people.map((person, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setEditSelectedPeople(prev =>
+                            prev.includes(person.name)
+                              ? prev.filter(n => n !== person.name)
+                              : [...prev, person.name]
+                          );
+                        }}
+                        className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                          editSelectedPeople.includes(person.name)
+                            ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                            : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                        }`}
+                      >
+                        {person.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+                  <p className="font-bold mb-2">Who paid for this order?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {people.map((person, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setEditSelectedPayer(person.name)}
+                        className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                          editSelectedPayer === person.name
+                            ? 'bg-green-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                            : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                        }`}
+                      >
+                        {person.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => {
+                      setEditingOrder(null);
+                      setEditOrderName('');
+                      setEditOrderValue('');
+                      setEditSelectedPeople([]);
+                      setEditSelectedPayer('');
+                      setEditNameError('');
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={!editOrderName || !editOrderValue || editSelectedPeople.length === 0 || !editSelectedPayer}
+                    className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {orders.length > 0 && (
           <div className="mt-6 p-4 bg-slate-400 dark:bg-slate-700 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
@@ -685,7 +981,38 @@ export default function Bill() {
           </ol>
         </div>
       </div>
+      
 
+
+      {/* Action Buttons */}
+      <div className="flex justify-end mb-4 gap-2 items-center">
+        {isClient && (
+          <>
+            <label className="inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={isSaveEnabled}
+                onChange={handleToggleSave}
+              />
+              <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+              <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Save Bill ?</span>
+            </label>
+            {isSaveEnabled && (
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-1.293-1.293z" />
+                </svg>
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            )}
+          </>
+        )}
+      </div>
       {/* Footer */}
       <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
         <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
