@@ -70,6 +70,9 @@ export default function Bill() {
   // Add new state for save button
   const [isSaving, setIsSaving] = useState(false);
 
+  // Add new state for confirmation modal
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+
   // Add useEffect for client-side initialization
   useEffect(() => {
     const initializeFromLocalStorage = async () => {
@@ -491,21 +494,35 @@ export default function Bill() {
     setEditNameError('');
   };
 
-  // Modify handleToggleSave to handle localStorage safely
+  // Modify handleToggleSave to show confirmation
   const handleToggleSave = () => {
     if (!isClient) return;
     
     const newSaveState = !isSaveEnabled;
-    setIsSaveEnabled(newSaveState);
     
-    if (newSaveState && currentBillId) {
-      // Save the current state to localStorage
-      localStorage.setItem('billShareId', currentBillId);
-      // Also save the current data to the database
-      handleSave();
+    if (newSaveState) {
+      // If enabling save, proceed directly
+      setIsSaveEnabled(true);
+      if (currentBillId) {
+        localStorage.setItem('billShareId', currentBillId);
+        handleSave();
+      }
     } else {
-      localStorage.removeItem('billShareId');
+      // If disabling save, show confirmation
+      setShowSaveConfirmModal(true);
     }
+  };
+
+  // Add handler for confirming save disable
+  const handleConfirmSaveDisable = () => {
+    setIsSaveEnabled(false);
+    localStorage.removeItem('billShareId');
+    setShowSaveConfirmModal(false);
+  };
+
+  // Add handler for canceling save disable
+  const handleCancelSaveDisable = () => {
+    setShowSaveConfirmModal(false);
   };
 
   // Add effect to save billShareId to localStorage when currentBillId changes
@@ -1013,34 +1030,76 @@ export default function Bill() {
 
 
       {/* Action Buttons */}
-      <div className="flex justify-end mb-4 gap-2 items-center">
-        {isClient && (
-          <>
-            <label className="inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
-                checked={isSaveEnabled}
-                onChange={handleToggleSave}
-              />
-              <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
-              <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Save Bill ?</span>
-            </label>
-            {isSaveEnabled && (
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-1.293-1.293z" />
-                </svg>
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-            )}
-          </>
-        )}
+      <div className="flex flex-col gap-4 mb-4">
+        <div className="flex justify-end gap-2 items-center">
+          {isClient && (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={isSaveEnabled}
+                    onChange={handleToggleSave}
+                  />
+                  <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                  <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Save Bill?</span>
+                </label>
+                <div className="relative group">
+                  <span className="cursor-help text-xl">💡</span>
+                  <div className="absolute right-0 w-64 p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg shadow-lg border-2 border-black dark:border-white opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <h3 className="font-bold mb-2">Tips for Save Feature:</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Toggle "Save Bill" to enable/disable saving</li>
+                      <li>When enabled, your bill data will be saved</li>
+                      <li>Click the "Save" button to manually save your latest changes</li>
+                      <li>Your saved bill will be available even after closing the browser</li>
+                      <li>Disabling save will remove the saved data from your browser</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              {isSaveEnabled && (
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-1.293-1.293z" />
+                  </svg>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Save Confirmation Modal */}
+      {showSaveConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">⚠️ Warning</h2>
+            <p className="mb-4">Are you sure you want to disable auto-save? Your saved data will be removed from your browser.</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={handleCancelSaveDisable}
+                className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSaveDisable}
+                className="bg-red-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+              >
+                Disable Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
         <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
