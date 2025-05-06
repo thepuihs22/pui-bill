@@ -90,6 +90,7 @@ export default function SharedBill() {
         }
 
         const data = await response.json();
+        console.log(data);
         setShareData(data);
         toast.success('Bill loaded successfully');
       } catch (error) {
@@ -160,20 +161,20 @@ export default function SharedBill() {
       </h1>
 
       {/* Payment Information */}
-      {shareData.paymentInfo && Object.values(shareData.paymentInfo).some(value => value) && (
+      {!!shareData?.payment_info && (
         <div className="mb-6 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
           <h2 className="font-bold text-xl mb-4">Payment Information</h2>
-          {shareData.paymentInfo.fullName && (
-            <p><strong>Full Name:</strong> {shareData.paymentInfo.fullName}</p>
+          {shareData.payment_info?.fullName && (
+            <p><strong>Full Name:</strong> {shareData.payment_info?.fullName}</p>
           )}
-          {shareData.paymentInfo.accountName && (
-            <p><strong>Account Name:</strong> {shareData.paymentInfo.accountName}</p>
+          {shareData.payment_info?.accountName && (
+            <p><strong>Account Name:</strong> {shareData.payment_info?.accountName}</p>
           )}
-          {shareData.paymentInfo.bankName && (
-            <p><strong>Bank Name:</strong> {shareData.paymentInfo.bankName}</p>
+          {shareData.payment_info?.bankName && (
+            <p><strong>Bank Name:</strong> {shareData.payment_info?.bankName}</p>
           )}
-          {shareData.paymentInfo.promptpay && (
-            <p><strong>Promptpay:</strong> {shareData.paymentInfo.promptpay}</p>
+          {shareData.payment_info?.promptpay && (
+            <p><strong>Promptpay:</strong> {shareData.payment_info?.promptpay}</p>
           )}
         </div>
       )}
