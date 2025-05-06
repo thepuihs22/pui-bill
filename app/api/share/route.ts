@@ -20,7 +20,7 @@ interface SharePayload {
     owes: number;
     balance: number;
   }[];
-  paymentInfo: {
+  payment_info: {
     accountName: string;
     promptpay: string;
     fullName: string;

@@ -24,7 +24,7 @@ interface Person {
 interface ShareData {
   orders: Order[];
   people: Person[];
-  paymentInfo?: {
+  payment_info?: {
     fullName?: string;
     accountName?: string;
     bankName?: string;

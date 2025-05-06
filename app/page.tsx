@@ -41,7 +41,7 @@ export default function Bill() {
   const [showCopied, setShowCopied] = useState(false);
 
   // Add new state for payment info
-  const [paymentInfo, setPaymentInfo] = useState({
+  const [payment_info, setPaymentInfo] = useState({
     accountName: '',
     promptpay: '',
     fullName: '',
@@ -247,7 +247,7 @@ export default function Bill() {
         .update({
           people,
           orders,
-          payment_info: paymentInfo,
+          payment_info: payment_info,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
           updated_at: new Date().toISOString()
         })
@@ -262,7 +262,7 @@ export default function Bill() {
     // Debounce the update operation
     const timeoutId = setTimeout(updateBillData, 1000);
     return () => clearTimeout(timeoutId);
-  }, [people, orders, paymentInfo, currentBillId]);
+  }, [people, orders, payment_info, currentBillId]);
 
   const handleAddPerson = () => {
     // Clear any previous error
@@ -407,7 +407,7 @@ export default function Bill() {
         ...person,
         ...calculatePersonBalance(person.name)
       })),
-      paymentInfo,
+      payment_info: payment_info,
       totalAmount: orders.reduce((sum, order) => sum + order.value, 0),
       timestamp: new Date().toISOString()
     };
@@ -431,7 +431,7 @@ export default function Bill() {
       console.error('Error copying link:', error);
       // You might want to show an error message to the user
     }
-  }, [orders, people, paymentInfo]);
+  }, [orders, people, payment_info]);
 
   // Add this new handler function
   const handleToggleAllPeople = () => {
@@ -543,7 +543,7 @@ export default function Bill() {
         .update({
           people,
           orders,
-          payment_info: paymentInfo,
+          payment_info: payment_info,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -974,7 +974,7 @@ export default function Bill() {
               <input
                 type="text"
                 name="fullName"
-                value={paymentInfo.fullName}
+                value={payment_info.fullName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Your Full Name"
                 className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
@@ -985,7 +985,7 @@ export default function Bill() {
               <input
                 type="text"
                 name="accountName"
-                value={paymentInfo.accountName}
+                value={payment_info.accountName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Account Name"
                 className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
@@ -996,7 +996,7 @@ export default function Bill() {
               <input
                 type="text"
                 name="bankName"
-                value={paymentInfo.bankName}
+                value={payment_info.bankName}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Bank Name"
                 className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
@@ -1007,7 +1007,7 @@ export default function Bill() {
               <input
                 type="text"
                 name="promptpay"
-                value={paymentInfo.promptpay}
+                value={payment_info.promptpay}
                 onChange={handlePaymentInfoUpdate}
                 placeholder="Promptpay Number"
                 className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
