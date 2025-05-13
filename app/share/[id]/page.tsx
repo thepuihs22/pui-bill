@@ -34,6 +34,12 @@ interface ShareData {
   timestamp: number;
 }
 
+interface PaymentDetail {
+  from: string;
+  to: string;
+  amount: number;
+}
+
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0
@@ -63,6 +69,33 @@ function calculatePersonalSummary(person: string, orders: Order[]): Person {
     owes,
     balance: paid - owes
   };
+}
+
+function calculatePaymentDetails(people: Person[]): PaymentDetail[] {
+  const payments: PaymentDetail[] = [];
+  const debtors = people.filter(p => p.balance < 0).sort((a, b) => a.balance - b.balance);
+  const creditors = people.filter(p => p.balance > 0).sort((a, b) => b.balance - a.balance);
+
+  for (const debtor of debtors) {
+    let remainingDebt = Math.abs(debtor.balance);
+    
+    for (const creditor of creditors) {
+      if (remainingDebt <= 0 || creditor.balance <= 0) continue;
+      
+      const paymentAmount = Math.min(remainingDebt, creditor.balance);
+      if (paymentAmount > 0) {
+        payments.push({
+          from: debtor.name,
+          to: creditor.name,
+          amount: paymentAmount
+        });
+        remainingDebt -= paymentAmount;
+        creditor.balance -= paymentAmount;
+      }
+    }
+  }
+  
+  return payments;
 }
 
 export default function SharedBill() {
@@ -216,6 +249,31 @@ export default function SharedBill() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Payment Instructions */}
+        <div className="mt-6">
+          <h3 className="font-bold text-lg mb-3">Payment Instructions</h3>
+          {(() => {
+            const paymentDetails = calculatePaymentDetails([...peopleWithCalculatedValues]);
+            if (paymentDetails.length === 0) {
+              return <p className="text-green-600">All payments are settled!</p>;
+            }
+            return (
+              <div className="space-y-2">
+                {paymentDetails.map((payment, index) => (
+                  <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-md border border-black dark:border-white">
+                    <p className="font-bold">
+                      {payment.from} should pay {payment.to}
+                    </p>
+                    <p className="text-lg">
+                      Amount: {formatNumber(payment.amount)} THB
+                    </p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
