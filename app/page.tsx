@@ -18,9 +18,10 @@ const supabase = createClient(
 );
 
 export default function Bill() {
-  const [people, setPeople] = useState<{ name: string; value: number }[]>([]);
+  const [people, setPeople] = useState<{ name: string; value: number; promptpay?: string }[]>([]);
   const [newName, setNewName] = useState('');
-  const [activeTab, setActiveTab] = useState('payment');
+  const [newPromptpay, setNewPromptpay] = useState('');
+  const [activeTab, setActiveTab] = useState('users');
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -72,6 +73,16 @@ export default function Bill() {
 
   // Add new state for confirmation modal
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+
+  // Add new state for editing person
+  const [editingPerson, setEditingPerson] = useState<{
+    index: number;
+    name: string;
+    promptpay?: string;
+  } | null>(null);
+  const [editPersonName, setEditPersonName] = useState('');
+  const [editPersonPromptpay, setEditPersonPromptpay] = useState('');
+  const [editPersonNameError, setEditPersonNameError] = useState('');
 
   // Add useEffect for client-side initialization
   useEffect(() => {
@@ -281,9 +292,11 @@ export default function Bill() {
 
       setPeople([...people, { 
         name: newName, 
-        value: 0
+        value: 0,
+        promptpay: newPromptpay || undefined
       }]);
       setNewName('');
+      setNewPromptpay('');
     }
   };
 
@@ -344,14 +357,6 @@ export default function Bill() {
   // Add function to remove order
   const handleRemoveOrder = (index: number) => {
     setOrders(orders.filter((_, i) => i !== index));
-  };
-
-  // Add payment info update handler
-  const handlePaymentInfoUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPaymentInfo(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
   };
 
   // Add calculateTotal function
@@ -569,6 +574,49 @@ export default function Bill() {
     }
   };
 
+  // Add handleEditPerson function
+  const handleEditPerson = (index: number) => {
+    const person = people[index];
+    setEditingPerson({
+      index,
+      name: person.name,
+      promptpay: person.promptpay
+    });
+    setEditPersonName(person.name);
+    setEditPersonPromptpay(person.promptpay || '');
+    setEditPersonNameError('');
+  };
+
+  // Add handleSavePersonEdit function
+  const handleSavePersonEdit = () => {
+    if (!editingPerson) return;
+
+    // Check for duplicate names (excluding the current person)
+    const nameExists = people.some(
+      (person, index) => 
+        index !== editingPerson.index && 
+        person.name.toLowerCase() === editPersonName.toLowerCase()
+    );
+
+    if (nameExists) {
+      setEditPersonNameError('This name already exists!');
+      return;
+    }
+
+    const updatedPeople = [...people];
+    updatedPeople[editingPerson.index] = {
+      ...updatedPeople[editingPerson.index],
+      name: editPersonName,
+      promptpay: editPersonPromptpay || undefined
+    };
+
+    setPeople(updatedPeople);
+    setEditingPerson(null);
+    setEditPersonName('');
+    setEditPersonPromptpay('');
+    setEditPersonNameError('');
+  };
+
   return (
     <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
       <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
@@ -576,7 +624,7 @@ export default function Bill() {
       </h1>
 
       <div className="flex mb-4 gap-2">
-        <button
+        {/* <button
           className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
             activeTab === 'payment'
               ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
@@ -585,7 +633,7 @@ export default function Bill() {
           onClick={() => setActiveTab('payment')}
         >
           Payment Info
-        </button>
+        </button> */}
         <button
           className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
             activeTab === 'users'
@@ -610,7 +658,7 @@ export default function Bill() {
 
       <div className={`mb-6 space-y-4 ${activeTab === 'users' ? 'block' : 'hidden'}`} id="bill-user-form">
         <div className="flex flex-col gap-2 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
             <input
               type="text"
               value={newName}
@@ -619,11 +667,18 @@ export default function Bill() {
                 setNameError(''); // Clear error when typing
               }}
               placeholder="Name"
-              className={`border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+              className={`w-full border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+            />
+            <input
+              type="text"
+              value={newPromptpay}
+              onChange={(e) => setNewPromptpay(e.target.value)}
+              placeholder="Promptpay (optional)"
+              className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
             />
             <button
               onClick={handleAddPerson}
-              className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+              className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out whitespace-nowrap"
             >
               Add Person
             </button>
@@ -638,13 +693,24 @@ export default function Bill() {
         <div className="space-y-2">
           {people.map((person, index) => (
             <div key={index} className="flex justify-between items-center bg-slate-400 dark:bg-slate-700 p-3 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-              <span className="font-bold">{person.name}</span>
-              <button
-                onClick={() => handleRemovePerson(index)}
-                className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
-              >
-                Remove
-              </button>
+              <span className="font-bold">
+                {person.name}
+                {person.promptpay && <span className="text-sm font-normal ml-2">({person.promptpay})</span>}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEditPerson(index)}
+                  className="bg-blue-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleRemovePerson(index)}
+                  className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -655,6 +721,7 @@ export default function Bill() {
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Add all people who are splitting the bill</li>
             <li>Each person&apos;s name must be unique</li>
+            <li>You can add an optional Promptpay number for each person to make money transfers easier</li>
             <li>You can remove people if they haven&apos;t been added to any orders</li>
           </ol>
         </div>
@@ -745,17 +812,14 @@ export default function Bill() {
 
         <div className="space-y-3 mt-4">
           {orders.map((order, index) => (
-            <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-              <div className="flex justify-between items-start">
+            <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="font-bold">{index + 1}. {order.name}</p>
-                  <p className="text-black">
-                    Total: {formatNumber(order.value)} ({formatNumber(order.value / order.selectedPeople.length)} THB/Person)
-                  </p>
-                  <p className="text-black">Paid by: {order.payer}</p>
-                  <p className="text-black">
-                    Split between: {order.selectedPeople.join(', ')}
-                  </p>
+                  <h3 className="font-bold text-lg">{order.name}</h3>
+                  <p className="text-sm">Amount: {formatNumber(order.value)} THB</p>
+                  <p className="text-sm">Per Person: {formatNumber(order.value / order.selectedPeople.length)} THB</p>
+                  <p className="text-sm">Paid by: {order.payer}</p>
+                  <p className="text-sm">Split between: {order.selectedPeople.join(', ')}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -941,7 +1005,7 @@ export default function Bill() {
                     <div className="text-right">
                       <div>Paid: {formatNumber(personPaid)} THB</div>
                       <div>Owes: {formatNumber(personOwes)} THB</div>
-                      <div className={netBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      <div className={netBalance >= 0 ? 'text-green-900' : 'text-red-600'}>
                         Balance: {formatNumber(netBalance)} THB
                       </div>
                     </div>
@@ -965,7 +1029,7 @@ export default function Bill() {
       </div>
 
       {/* Update the Payment Info Form */}
-      <div className={`mb-6 space-y-4 ${activeTab === 'payment' ? 'block' : 'hidden'}`}>
+      {/* <div className={`mb-6 space-y-4 ${activeTab === 'payment' ? 'block' : 'hidden'}`}>
         <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
           <h2 className="font-bold text-xl mb-4">Payment Information</h2>
           <div className="space-y-4">
@@ -1016,7 +1080,6 @@ export default function Bill() {
           </div>
         </div>
 
-        {/* Payment Info Tab Note */}
         <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
           <h3 className="font-bold mb-2">📝 How to use:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
@@ -1026,7 +1089,7 @@ export default function Bill() {
           </ol>
         </div>
       </div>
-      
+       */}
 
 
       {/* Action Buttons */}
@@ -1095,6 +1158,64 @@ export default function Bill() {
               >
                 Disable Save
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Person Modal */}
+      {editingPerson && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">Edit Person</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  value={editPersonName}
+                  onChange={(e) => {
+                    setEditPersonName(e.target.value);
+                    setEditPersonNameError('');
+                  }}
+                  placeholder="Name"
+                  className={`w-full border-2 ${editPersonNameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+                />
+                {editPersonNameError && (
+                  <div className="text-red-500 text-sm mt-1">{editPersonNameError}</div>
+                )}
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={editPersonPromptpay}
+                  onChange={(e) => setEditPersonPromptpay(e.target.value)}
+                  placeholder="Promptpay (optional)"
+                  className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setEditingPerson(null);
+                    setEditPersonName('');
+                    setEditPersonPromptpay('');
+                    setEditPersonNameError('');
+                  }}
+                  className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePersonEdit}
+                  disabled={!editPersonName}
+                  className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
