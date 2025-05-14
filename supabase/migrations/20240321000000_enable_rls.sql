@@ -13,11 +13,11 @@ CREATE POLICY "Allow public insert" ON public.shared_bills
     FOR INSERT
     WITH CHECK (true);
 
--- Allow updates only if the bill hasn't expired
-CREATE POLICY "Allow updates for non-expired bills" ON public.shared_bills
+-- Allow updates for any bill
+CREATE POLICY "Allow updates for any bill" ON public.shared_bills
     FOR UPDATE
-    USING (expires_at > NOW())
-    WITH CHECK (expires_at > NOW());
+    USING (true)
+    WITH CHECK (true);
 
 -- Allow deletion only if the bill has expired
 CREATE POLICY "Allow deletion of expired bills" ON public.shared_bills

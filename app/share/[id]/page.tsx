@@ -301,7 +301,7 @@ export default function SharedBill() {
           {(() => {
             const paymentDetails = calculatePaymentDetails([...peopleWithCalculatedValues]);
             if (paymentDetails.length === 0) {
-              return <p className="text-green-600">All payments are settled!</p>;
+              return <p className="font-bold text-blue-800">All payments are settled!</p>;
             }
             return (
               <div className="space-y-2">
