@@ -279,25 +279,28 @@ export default function Bill() {
     // Clear any previous error
     setNameError('');
     
-    if (newName) {
-      // Check if name already exists (case insensitive)
-      const nameExists = people.some(
-        person => person.name.toLowerCase() === newName.toLowerCase()
-      );
-
-      if (nameExists) {
-        setNameError('This name already exists!');
-        return;
-      }
-
-      setPeople([...people, { 
-        name: newName, 
-        value: 0,
-        promptpay: newPromptpay || undefined
-      }]);
-      setNewName('');
-      setNewPromptpay('');
+    if (!newName.trim()) {
+      setNameError('Name is required!');
+      return;
     }
+
+    // Check if name already exists (case insensitive)
+    const nameExists = people.some(
+      person => person.name.toLowerCase() === newName.toLowerCase()
+    );
+
+    if (nameExists) {
+      setNameError('This name already exists!');
+      return;
+    }
+
+    setPeople([...people, { 
+      name: newName, 
+      value: 0,
+      promptpay: newPromptpay || undefined
+    }]);
+    setNewName('');
+    setNewPromptpay('');
   };
 
   const handleRemovePerson = (index: number) => {

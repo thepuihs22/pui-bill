@@ -29,7 +29,7 @@ const Navbar = ({ activeSection, onSectionClick }: NavbarProps) => {
         <div className="flex justify-between items-center">
           <div className="text-2xl font-bold text-gray-800"></div>
           <div className="hidden md:flex space-x-8">
-            {['how-we-work', 'our-projects', 'about-us', 'contact'].map((section) => (
+            {['how-we-work', 'our-projects', 'about-us', 'team'].map((section) => (
               <button
                 key={section}
                 onClick={() => onSectionClick(section)}

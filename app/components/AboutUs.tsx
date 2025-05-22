@@ -46,18 +46,18 @@ const AboutUs = () => {
   }, [isVisible, fullText]);
 
   return (
-    <section ref={sectionRef} id="about-us" className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
+    <section ref={sectionRef} id="about-us" className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
         <div className="home-flashback__header">
-          <h4 className="home-flashback__title text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-10 md:mb-12 text-center leading-tight">
+          <h4 className="home-flashback__title text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center leading-tight">
            "We transform ideas into digital results to reinvent the connection between clients and the public."
           </h4>
           <div className="home-flashback__prompt">
             <div className="prompt">
-              <div className="prompt__wrapper flex flex-col items-center mx-4 sm:mx-8 md:mx-12 lg:mx-24">
-                <div className="prompt__label text-lg sm:text-xl md:text-2xl font-semibold mt-4 text-center bg-[#829AFF] p-2 sm:p-3 md:p-4 rounded-lg w-full max-w-3xl">
+              <div className="prompt__wrapper flex flex-col items-center mx-2 sm:mx-4 md:mx-8 lg:mx-16">
+                <div className="prompt__label text-base sm:text-lg md:text-xl lg:text-2xl font-semibold mt-2 sm:mt-4 text-center bg-[#829AFF] p-2 sm:p-3 md:p-4 rounded-lg w-full max-w-3xl">
                   <div className="bg-[#111827] p-2 sm:p-3 md:p-4 rounded-lg">
-                    <span className="text-splitter text-[#E6FF74] mr-2 sm:mr-4 md:mr-10">
+                    <span className="text-splitter text-[#E6FF74] mr-1 sm:mr-2 md:mr-4">
                       {text}
                       <span className="animate-pulse">|</span>
                     </span>

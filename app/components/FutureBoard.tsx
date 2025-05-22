@@ -143,7 +143,7 @@ const FutureBoard = () => {
   }, []);
 
   return (
-    <div ref={mountRef} className="w-full h-full absolute inset-0" />
+    <div ref={mountRef} className="w-full h-full absolute inset-0 overflow-hidden" />
   );
 };
 
