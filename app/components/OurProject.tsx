@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const OurProject = () => {
   const projects = [
@@ -48,7 +49,13 @@ const OurProject = () => {
               >
                 <div className="bottom-layer bg-white p-4 md:p-6 h-full flex flex-col justify-center transition-all duration-300 group-hover:translate-y-[-10px]">
                   <div className="icon-holder mb-4">
-                    <img src={project.icon} alt={project.title} className="w-12 h-12 md:w-16 md:h-16 text-gray-800" />
+                    <Image
+                      src={project.icon}
+                      alt={project.title}
+                      width={64}
+                      height={64}
+                      className="w-12 h-12 md:w-16 md:h-16 text-gray-800"
+                    />
                   </div>
                   <div className="block-name-holder mb-4">
                     <p className="text-lg md:text-xl font-bold">{project.title}</p>
@@ -60,7 +67,13 @@ const OurProject = () => {
 
                 <div className="top-layer absolute inset-0 bg-[#1d1d1d] p-4 md:p-6 flex flex-col justify-center opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">
                   <div className="icon-holder mb-4">
-                    <img src={project.icon} alt={project.title} className="w-12 h-12 md:w-16 md:h-16 text-white" />
+                    <Image
+                      src={project.icon}
+                      alt={project.title}
+                      width={64}
+                      height={64}
+                      className="w-12 h-12 md:w-16 md:h-16 text-white"
+                    />
                   </div>
                   <div className="block-name-holder">
                     <Link href={project.link} target="_blank">

@@ -279,28 +279,25 @@ export default function Bill() {
     // Clear any previous error
     setNameError('');
     
-    if (!newName.trim()) {
-      setNameError('Name is required!');
-      return;
+    if (newName) {
+      // Check if name already exists (case insensitive)
+      const nameExists = people.some(
+        person => person.name.toLowerCase() === newName.toLowerCase()
+      );
+
+      if (nameExists) {
+        setNameError('This name already exists!');
+        return;
+      }
+
+      setPeople([...people, { 
+        name: newName, 
+        value: 0,
+        promptpay: newPromptpay || undefined
+      }]);
+      setNewName('');
+      setNewPromptpay('');
     }
-
-    // Check if name already exists (case insensitive)
-    const nameExists = people.some(
-      person => person.name.toLowerCase() === newName.toLowerCase()
-    );
-
-    if (nameExists) {
-      setNameError('This name already exists!');
-      return;
-    }
-
-    setPeople([...people, { 
-      name: newName, 
-      value: 0,
-      promptpay: newPromptpay || undefined
-    }]);
-    setNewName('');
-    setNewPromptpay('');
   };
 
   const handleRemovePerson = (index: number) => {
@@ -368,21 +365,10 @@ export default function Bill() {
   // };
 
   const handleShare = async () => {
-    console.log('handleShare');
-    console.log(currentBillId);
-    if (!currentBillId) {
-      toast.error('Please save the bill first before sharing');
-      return;
-    }
+    if (!currentBillId) return;
 
     try {
-      // First verify that the bill exists
-      const response = await fetch(`/bill/api/share?id=${currentBillId}`);
-      if (!response.ok) {
-        throw new Error('Failed to verify bill');
-      }
-
-      const shareUrl = `${window.location.origin}/bill/share/${currentBillId}`;
+      const shareUrl = `${window.location.origin}/share/${currentBillId}`;
       
       // Copy to clipboard
       await navigator.clipboard.writeText(shareUrl);
@@ -392,7 +378,7 @@ export default function Bill() {
       window.open(shareUrl, '_blank');
     } catch (error) {
       console.error('Error sharing bill:', error);
-      toast.error('Failed to generate share link. Please try saving the bill again.');
+      toast.error('Failed to generate share link');
     }
   };
 
@@ -423,10 +409,11 @@ export default function Bill() {
     const shareData = {
       orders,
       people: people.map(person => ({
-        name: person.name,
-        promptpay: person.promptpay
+        ...person,
+        ...calculatePersonBalance(person.name)
       })),
       payment_info: payment_info,
+      totalAmount: orders.reduce((sum, order) => sum + order.value, 0),
       timestamp: new Date().toISOString()
     };
 
@@ -440,14 +427,14 @@ export default function Bill() {
       });
       
       const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/bill/share/${shareId}`;
+      const shareUrl = `${window.location.origin}/share/${shareId}`;
       
       navigator.clipboard.writeText(shareUrl);
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
     } catch (error) {
       console.error('Error copying link:', error);
-      toast.error('Failed to copy share link');
+      // You might want to show an error message to the user
     }
   }, [orders, people, payment_info]);
 
@@ -631,361 +618,543 @@ export default function Bill() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFFE9] dark:bg-gray-900 text-gray-800 dark:text-gray">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">Futureboard</h1>
+    <div className="max-w-lg mx-auto p-4 font-mono dark:bg-gray-900 dark:text-white">
+      <h1 className="text-3xl font-bold mb-6 text-center bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+        Eat & Split
+      </h1>
 
-        <div className="flex mb-6 gap-4 justify-center">
+      <div className="flex mb-4 gap-2">
+        {/* <button
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+            activeTab === 'payment'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+          }`}
+          onClick={() => setActiveTab('payment')}
+        >
+          Payment Info
+        </button> */}
+        <button
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+            activeTab === 'users'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+          }`}
+          onClick={() => setActiveTab('users')}
+        >
+          Members
+        </button>
+        <button
+          className={`py-2 px-4 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+            activeTab === 'orders'
+              ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+              : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+          }`}
+          onClick={() => setActiveTab('orders')}
+        >
+          Orders
+        </button>
+      </div>
+
+      <div className={`mb-6 space-y-4 ${activeTab === 'users' ? 'block' : 'hidden'}`} id="bill-user-form">
+        <div className="flex flex-col gap-2 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => {
+                setNewName(e.target.value);
+                setNameError(''); // Clear error when typing
+              }}
+              placeholder="Name"
+              className={`w-full border-2 ${nameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+            />
+            <input
+              type="text"
+              value={newPromptpay}
+              onChange={(e) => setNewPromptpay(e.target.value)}
+              placeholder="Promptpay (optional)"
+              className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+            />
+            <button
+              onClick={handleAddPerson}
+              className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out whitespace-nowrap"
+            >
+              Add Person
+            </button>
+          </div>
+          {nameError && (
+            <div className="text-red-500 text-sm font-bold bg-white p-2 rounded border-2 border-red-500">
+              {nameError}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          {people.map((person, index) => (
+            <div key={index} className="flex justify-between items-center bg-slate-400 dark:bg-slate-700 p-3 rounded-md border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
+              <span className="font-bold">
+                {person.name}
+                {person.promptpay && <span className="text-sm font-normal ml-2">({person.promptpay})</span>}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEditPerson(index)}
+                  className="bg-blue-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleRemovePerson(index)}
+                  className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Members Tab Note */}
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Add all people who are splitting the bill</li>
+            <li>Each person&apos;s name must be unique</li>
+            <li>You can add an optional Promptpay number for each person to make money transfers easier</li>
+            <li>You can remove people if they haven&apos;t been added to any orders</li>
+          </ol>
+        </div>
+      </div>
+
+      <div className={`mb-6 space-y-4 ${activeTab === 'orders' ? 'block' : 'hidden'}`} id="bill-order-form">
+        <div className="space-y-4 bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newOrder}
+              onChange={(e) => setNewOrder(e.target.value)}
+              placeholder="Order"
+              className="flex-1 border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+            />
+            <input
+              type="number"
+              value={newOrderValue}
+              onChange={(e) => setNewOrderValue(e.target.value)}
+              placeholder="Amount"
+              className="w-32 border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+            />
+          </div>
+
+          <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-bold">Select people to split with:</p>
+              <button
+                onClick={handleToggleAllPeople}
+                className="flex items-center gap-1 px-2 py-1 text-sm rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out bg-slate-400 dark:bg-slate-700 hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]"
+                title={selectedPeople.length === people.length ? "All" : "All"}
+              >
+                {/* Toggle Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  {selectedPeople.length === people.length ? (
+                    <path fillRule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clipRule="evenodd" />
+                  ) : (
+                    <path fillRule="evenodd" d="M10 5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 0110 5z" clipRule="evenodd" />
+                  )}
+                </svg>
+                {selectedPeople.length === people.length ? "All" : "All"}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {people.map((person, index) => (
+                <button
+                  key={index}
+                  onClick={() => togglePersonSelection(person.name)}
+                  className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                    selectedPeople.includes(person.name)
+                      ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                      : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                  }`}
+                >
+                  {person.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+            <p className="font-bold mb-2">Who paid for this order?</p>
+            <div className="flex flex-wrap gap-2">
+              {people.map((person, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedPayer(person.name)}
+                  className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                    selectedPayer === person.name
+                      ? 'bg-green-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                      : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                  }`}
+                >
+                  {person.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button
-            className={`py-2 px-6 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-              activeTab === 'users'
-                ? 'bg-[#829aff] text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-            }`}
-            onClick={() => setActiveTab('users')}
+            onClick={handleAddOrder}
+            disabled={!newOrder || !newOrderValue || selectedPeople.length === 0 || !selectedPayer}
+            className="w-full bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
           >
-            Members
-          </button>
-          <button
-            className={`py-2 px-6 font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-              activeTab === 'orders'
-                ? 'bg-[#829aff] text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-            }`}
-            onClick={() => setActiveTab('orders')}
-          >
-            Orders
+            Add Order
           </button>
         </div>
 
-        <div className={`mb-6 space-y-4 ${activeTab === 'users' ? 'block' : 'hidden'}`} id="bill-user-form">
-          <div className="flex flex-col gap-4 bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-black shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4">
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => {
-                  setNewName(e.target.value);
-                  setNameError('');
-                }}
-                placeholder="Name"
-                className={`w-full border-2 ${nameError ? 'border-[#BE5103]' : 'border-black dark:border-white'} p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20`}
-              />
-              <input
-                type="text"
-                value={newPromptpay}
-                onChange={(e) => setNewPromptpay(e.target.value)}
-                placeholder="Promptpay (optional)"
-                className="w-full border-2 border-black dark:border-white p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20"
-              />
-              <button
-                onClick={handleAddPerson}
-                className="bg-[#829aff] text-white px-6 py-3 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out whitespace-nowrap"
-              >
-                Add Person
-              </button>
-            </div>
-            {nameError && (
-              <div className="bg-[#BE5103] text-sm font-bold bg-white/50 dark:bg-gray-700 p-3 rounded-lg border-2 border-red-500">
-                {nameError}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            {people.map((person, index) => (
-              <div key={index} className="flex justify-between items-center bg-white/80 dark:bg-[#FBFFE9] p-4 rounded-lg border-2 border-black dark:border-black shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-                <span className="font-bold">
-                  {person.name}
-                  {person.promptpay && <span className="text-sm font-normal ml-2">({person.promptpay})</span>}
-                </span>
+        <div className="space-y-3 mt-4">
+          {orders.map((order, index) => (
+            <div key={index} className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-bold text-lg">{order.name}</h3>
+                  <p className="text-sm">Amount: {formatNumber(order.value)} THB</p>
+                  <p className="text-sm">Per Person: {formatNumber(order.value / order.selectedPeople.length)} THB</p>
+                  <p className="text-sm">Paid by: {order.payer}</p>
+                  <p className="text-sm">Split between: {order.selectedPeople.join(', ')}</p>
+                </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleEditPerson(index)}
-                    className="bg-[#829aff] text-white px-4 py-2 font-mono border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white] transition-all duration-150 ease-in-out"
+                    onClick={() => handleEditOrder(index)}
+                    className="bg-blue-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleRemovePerson(index)}
-                    className="bg-red-500 text-white px-4 py-2 font-mono border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white] transition-all duration-150 ease-in-out"
+                    onClick={() => handleRemoveOrder(index)}
+                    className="bg-red-500 text-white px-3 py-1 font-mono border-2 border-black shadow-[2px_2px_0px_0px_black] hover:shadow-[4px_4px_0px_0px_black] transition-all duration-150 ease-in-out"
                   >
                     Remove
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div className="bg-yellow-100/80 dark:bg-yellow-900/80 p-6 rounded-lg border-2 border-black dark:border-white dark:text-white">
-            <h3 className="font-bold mb-3">📝 How to use:</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm">
-              <li>Add all people who are splitting the bill</li>
-              <li>Each person&apos;s name must be unique</li>
-              <li>You can add an optional Promptpay number for each person to make money transfers easier</li>
-              <li>You can remove people if they haven&apos;t been added to any orders</li>
-            </ol>
-          </div>
+            </div>
+          ))}
         </div>
 
-        <div className={`mb-6 space-y-4 ${activeTab === 'orders' ? 'block' : 'hidden'}`} id="bill-order-form">
-          <div className="space-y-4 bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-black shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                value={newOrder}
-                onChange={(e) => setNewOrder(e.target.value)}
-                placeholder="Order"
-                className="flex-1 border-2 border-black dark:border-white p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20"
-              />
-              <input
-                type="number"
-                value={newOrderValue}
-                onChange={(e) => setNewOrderValue(e.target.value)}
-                placeholder="Amount"
-                className="w-32 border-2 border-black dark:border-white p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20"
-              />
-            </div>
+        {/* Edit Order Modal */}
+        {editingOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
+              <h2 className="text-2xl font-bold mb-4">Edit Order</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    value={editOrderName}
+                    onChange={(e) => {
+                      setEditOrderName(e.target.value);
+                      setEditNameError('');
+                    }}
+                    placeholder="Order Name"
+                    className={`w-full border-2 ${editNameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
+                  />
+                  {editNameError && (
+                    <div className="text-red-500 text-sm mt-1">{editNameError}</div>
+                  )}
+                </div>
 
-            <div className="border-2 border-black dark:border-white p-4 rounded-lg bg-white/50 dark:bg-gray-700">
-              <div className="flex justify-between items-center mb-3">
-                <p className="font-bold dark:text-white">Select people to split with:</p>
+                <div>
+                  <input
+                    type="number"
+                    value={editOrderValue}
+                    onChange={(e) => setEditOrderValue(e.target.value)}
+                    placeholder="Amount"
+                    className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+                  />
+                </div>
+
+                <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+                  <p className="font-bold mb-2">Select people to split with:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {people.map((person, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setEditSelectedPeople(prev =>
+                            prev.includes(person.name)
+                              ? prev.filter(n => n !== person.name)
+                              : [...prev, person.name]
+                          );
+                        }}
+                        className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                          editSelectedPeople.includes(person.name)
+                            ? 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                            : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                        }`}
+                      >
+                        {person.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-2 border-black dark:border-white p-3 rounded bg-white dark:bg-gray-800">
+                  <p className="font-bold mb-2">Who paid for this order?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {people.map((person, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setEditSelectedPayer(person.name)}
+                        className={`px-3 py-1 rounded font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
+                          editSelectedPayer === person.name
+                            ? 'bg-green-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
+                            : 'bg-slate-400 dark:bg-slate-700 shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
+                        }`}
+                      >
+                        {person.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => {
+                      setEditingOrder(null);
+                      setEditOrderName('');
+                      setEditOrderValue('');
+                      setEditSelectedPeople([]);
+                      setEditSelectedPayer('');
+                      setEditNameError('');
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={!editOrderName || !editOrderValue || editSelectedPeople.length === 0 || !editSelectedPayer}
+                    className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {orders.length > 0 && (
+          <div className="mt-6 p-4 bg-slate-400 dark:bg-slate-700 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-bold text-xl">Summary</h2>
+              <div className="flex gap-2">
                 <button
-                  onClick={handleToggleAllPeople}
-                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out bg-white/80 dark:bg-[#FBFFE9] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]"
-                  title={selectedPeople.length === people.length ? "All" : "All"}
+                  onClick={handleCopyLink}
+                  className="bg-blue-500 text-white px-3 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out relative"
+                  title="Copy share link"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    {selectedPeople.length === people.length ? (
-                      <path fillRule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clipRule="evenodd" />
-                    ) : (
-                      <path fillRule="evenodd" d="M10 5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 0110 5z" clipRule="evenodd" />
-                    )}
+                  {/* Clipboard Icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
                   </svg>
-                  {selectedPeople.length === people.length ? "All" : "All"}
+                  {/* Copied Notification */}
+                  {showCopied && (
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-sm py-1 px-2 rounded">
+                      Copied!
+                    </div>
+                  )}
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="bg-green-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
+                >
+                  Review Bill
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {people.map((person, index) => (
-                  <button
-                    key={index}
-                    onClick={() => togglePersonSelection(person.name)}
-                    className={`px-4 py-2 rounded-lg font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-                      selectedPeople.includes(person.name)
-                        ? 'bg-[#829aff] text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                        : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-                    }`}
-                  >
-                    {person.name}
-                  </button>
-                ))}
-              </div>
             </div>
+            <p className="font-bold text-lg border-b-2 border-black pb-2 flex justify-between">
+              <span>Total Orders:</span>
+              <span>{formatNumber(orders.reduce((sum, order) => sum + order.value, 0))} THB</span>
+            </p>
+            <div className="mt-3 space-y-2">
+              {people.map((person) => {
+                // Calculate what this person owes
+                const personOwes = orders.reduce((sum, order) => {
+                  if (order.selectedPeople.includes(person.name)) {
+                    return sum + (order.value / order.selectedPeople.length);
+                  }
+                  return sum;
+                }, 0);
 
-            <div className="border-2 border-black dark:border-white p-4 rounded-lg bg-white/50 dark:bg-gray-700">
-              <p className="font-bold mb-3 dark:text-white">Who paid for this order?</p>
-              <div className="flex flex-wrap gap-2">
-                {people.map((person, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedPayer(person.name)}
-                    className={`px-4 py-2 rounded-lg font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-                      selectedPayer === person.name
-                        ? 'bg-green-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                        : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-                    }`}
-                  >
-                    {person.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+                // Calculate what this person paid
+                const personPaid = orders.reduce((sum, order) => {
+                  if (order.payer === person.name) {
+                    return sum + order.value;
+                  }
+                  return sum;
+                }, 0);
 
-            <button
-              onClick={handleAddOrder}
-              disabled={!newOrder || !newOrderValue || selectedPeople.length === 0 || !selectedPayer}
-              className="w-full bg-[#829aff] text-white px-6 py-3 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
-            >
-              Add Order
-            </button>
-          </div>
+                // Calculate net balance (negative means they owe money)
+                const netBalance = personPaid - personOwes;
 
-          <div className="space-y-4 mt-6">
-            {orders.map((order, index) => (
-              <div key={index} className="bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-black shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-bold text-xl">{order.name}</h3>
-                    <p className="text-sm">Amount: {formatNumber(order.value)} THB</p>
-                    <p className="text-sm">Per Person: {formatNumber(order.value / order.selectedPeople.length)} THB</p>
-                    <p className="text-sm">Paid by: {order.payer}</p>
-                    <p className="text-sm">Split between: {order.selectedPeople.join(', ')}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditOrder(index)}
-                      className="bg-[#829aff] text-white px-4 py-2 font-mono border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white] transition-all duration-150 ease-in-out"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemoveOrder(index)}
-                      className="bg-red-500 text-white px-4 py-2 font-mono border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white] transition-all duration-150 ease-in-out"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {orders.length > 0 && (
-            <div className="mt-6 p-6 bg-white/80 dark:bg-[#FBFFE9] border-2 border-black dark:border-black rounded-lg shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-2xl">Summary</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCopyLink}
-                    className="bg-[#829aff] text-white px-4 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out relative"
-                    title="Copy share link"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-                    </svg>
-                    {showCopied && (
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-sm py-1 px-2 rounded">
-                        Copied!
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="bg-green-500 text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out"
-                  >
-                    Review Bill
-                  </button>
-                </div>
-              </div>
-              <p className="font-bold text-lg border-b-2 border-black dark:border-white pb-3 flex justify-between">
-                <span>Total Orders:</span>
-                <span>{formatNumber(orders.reduce((sum, order) => sum + order.value, 0))} THB</span>
-              </p>
-              <div className="mt-4 space-y-3">
-                {people.map((person) => {
-                  const personOwes = orders.reduce((sum, order) => {
-                    if (order.selectedPeople.includes(person.name)) {
-                      return sum + (order.value / order.selectedPeople.length);
-                    }
-                    return sum;
-                  }, 0);
-
-                  const personPaid = orders.reduce((sum, order) => {
-                    if (order.payer === person.name) {
-                      return sum + order.value;
-                    }
-                    return sum;
-                  }, 0);
-
-                  const netBalance = personPaid - personOwes;
-
-                  return (
-                    <div key={person.name} className="font-mono flex justify-between items-center border-b border-black dark:border-white py-3">
-                      <span>{person.name}</span>
-                      <div className="text-right">
-                        <div>Paid: {formatNumber(personPaid)} THB</div>
-                        <div>Owes: {formatNumber(personOwes)} THB</div>
-                        <div className={netBalance >= 0 ? 'text-green-900 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                          Balance: {formatNumber(netBalance)} THB
-                        </div>
+                return (
+                  <div key={person.name} className="font-mono flex justify-between items-center border-b border-black dark:border-white py-2">
+                    <span>{person.name}</span>
+                    <div className="text-right">
+                      <div>Paid: {formatNumber(personPaid)} THB</div>
+                      <div>Owes: {formatNumber(personOwes)} THB</div>
+                      <div className={netBalance >= 0 ? 'text-green-900' : 'text-red-600'}>
+                        Balance: {formatNumber(netBalance)} THB
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-yellow-100/80 dark:bg-yellow-900/80 p-6 rounded-lg border-2 border-black dark:border-white dark:text-white">
-            <h3 className="font-bold mb-3">📝 How to use:</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm">
-              <li>Enter the order name and total amount</li>
-              <li>Select who&apos;s splitting this order (use "All" button to select everyone)</li>
-              <li>The amount will be split equally between selected people</li>
-              <li>Review the summary and share the bill when done</li>
-            </ol>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex justify-end gap-2 items-center">
-            {isClient && (
-              <>
-                <div className="flex items-center gap-2">
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
-                      checked={isSaveEnabled}
-                      onChange={handleToggleSave}
-                    />
-                    <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
-                    <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Save Bill?</span>
-                  </label>
-                  <div className="relative group">
-                    <span className="cursor-help text-xl">💡</span>
-                    <div className="absolute right-0 w-64 p-3 bg-yellow-100/80 dark:bg-yellow-900/80 rounded-lg shadow-lg border-2 border-black dark:border-white opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <h3 className="font-bold mb-2">Tips for Save Feature:</h3>
-                      <ul className="list-disc list-inside space-y-1 text-sm">
-                        <li>Toggle "Save Bill" to enable/disable saving</li>
-                        <li>When enabled, your bill data will be saved</li>
-                        <li>Click the "Save" button to manually save your latest changes</li>
-                        <li>Your saved bill will be available even after closing the browser</li>
-                        <li>Disabling save will remove the saved data from your browser</li>
-                      </ul>
-                    </div>
                   </div>
-                </div>
-                {isSaveEnabled && (
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-[#829aff] text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-1.293-1.293z" />
-                    </svg>
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </button>
-                )}
-              </>
-            )}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
-          <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
-          <p className="mt-1">Made with 💖 by Futureboard</p>
-        </footer>
+        {/* Orders Tab Note */}
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Enter the order name and total amount</li>
+            <li>Select who&apos;s splitting this order (use "All" button to select everyone)</li>
+            <li>The amount will be split equally between selected people</li>
+            <li>Review the summary and share the bill when done</li>
+          </ol>
+        </div>
       </div>
 
-      {/* Modals */}
+      {/* Update the Payment Info Form */}
+      {/* <div className={`mb-6 space-y-4 ${activeTab === 'payment' ? 'block' : 'hidden'}`}>
+        <div className="bg-slate-400 dark:bg-slate-700 p-4 border-4 border-black dark:border-white rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white]">
+          <h2 className="font-bold text-xl mb-4">Payment Information</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-2 font-bold">Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                value={payment_info.fullName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Your Full Name"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Account Name</label>
+              <input
+                type="text"
+                name="accountName"
+                value={payment_info.accountName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Account Name"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Bank Name</label>
+              <input
+                type="text"
+                name="bankName"
+                value={payment_info.bankName}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Bank Name"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+                />
+            </div>
+            <div>
+              <label className="block mb-2 font-bold">Promptpay Number</label>
+              <input
+                type="text"
+                name="promptpay"
+                value={payment_info.promptpay}
+                onChange={handlePaymentInfoUpdate}
+                placeholder="Promptpay Number"
+                className="w-full border-2 border-black dark:border-white p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-yellow-100 dark:bg-yellow-900 p-4 border-2 border-black dark:border-white rounded-md">
+          <h3 className="font-bold mb-2">📝 How to use:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Fill in your payment details</li>
+            <li>This information will be shown to others when you share the bill</li>
+            <li>All fields are optional, but helpful for receiving payments</li>
+          </ol>
+        </div>
+      </div>
+       */}
+
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-4 mb-4">
+        <div className="flex justify-end gap-2 items-center">
+          {isClient && (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={isSaveEnabled}
+                    onChange={handleToggleSave}
+                  />
+                  <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                  <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Save Bill?</span>
+                </label>
+                <div className="relative group">
+                  <span className="cursor-help text-xl">💡</span>
+                  <div className="absolute right-0 w-64 p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg shadow-lg border-2 border-black dark:border-white opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <h3 className="font-bold mb-2">Tips for Save Feature:</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Toggle "Save Bill" to enable/disable saving</li>
+                      <li>When enabled, your bill data will be saved</li>
+                      <li>Click the "Save" button to manually save your latest changes</li>
+                      <li>Your saved bill will be available even after closing the browser</li>
+                      <li>Disabling save will remove the saved data from your browser</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              {isSaveEnabled && (
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-1.293-1.293z" />
+                  </svg>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Save Confirmation Modal */}
       {showSaveConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
             <h2 className="text-2xl font-bold mb-4">⚠️ Warning</h2>
             <p className="mb-4">Are you sure you want to disable auto-save? Your saved data will be removed from your browser.</p>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={handleCancelSaveDisable}
-                className="bg-gray-500 text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out"
+                className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmSaveDisable}
-                className="bg-red-500 text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out"
+                className="bg-red-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
               >
                 Disable Save
               </button>
@@ -994,9 +1163,10 @@ export default function Bill() {
         </div>
       )}
 
+      {/* Edit Person Modal */}
       {editingPerson && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-400 dark:bg-slate-700 p-6 rounded-md border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] max-w-lg w-full">
             <h2 className="text-2xl font-bold mb-4">Edit Person</h2>
             
             <div className="space-y-4">
@@ -1009,10 +1179,10 @@ export default function Bill() {
                     setEditPersonNameError('');
                   }}
                   placeholder="Name"
-                  className={`w-full border-2 ${editPersonNameError ? 'border-red-500' : 'border-black dark:border-white'} p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20`}
+                  className={`w-full border-2 ${editPersonNameError ? 'border-red-500' : 'border-black'} p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white`}
                 />
                 {editPersonNameError && (
-                  <div className="bg-[#BE5103] text-sm mt-1">{editPersonNameError}</div>
+                  <div className="text-red-500 text-sm mt-1">{editPersonNameError}</div>
                 )}
               </div>
 
@@ -1022,7 +1192,7 @@ export default function Bill() {
                   value={editPersonPromptpay}
                   onChange={(e) => setEditPersonPromptpay(e.target.value)}
                   placeholder="Promptpay (optional)"
-                  className="w-full border-2 border-black dark:border-white p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                  className="w-full border-2 border-black p-2 rounded bg-white dark:bg-gray-800 font-mono dark:text-white"
                 />
               </div>
 
@@ -1034,14 +1204,14 @@ export default function Bill() {
                     setEditPersonPromptpay('');
                     setEditPersonNameError('');
                   }}
-                  className="bg-gray-500 text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out"
+                  className="bg-gray-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSavePersonEdit}
                   disabled={!editPersonName}
-                  className="bg-[#829aff] text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
+                  className="bg-blue-500 text-white px-4 py-2 font-mono border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-[6px_6px_0px_0px_black] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
                 >
                   Save Changes
                 </button>
@@ -1051,108 +1221,11 @@ export default function Bill() {
         </div>
       )}
 
-      {editingOrder && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/80 dark:bg-[#FBFFE9] p-6 rounded-lg border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] max-w-lg w-full">
-            <h2 className="text-2xl font-bold mb-4">Edit Order</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  value={editOrderName}
-                  onChange={(e) => {
-                    setEditOrderName(e.target.value);
-                    setEditNameError('');
-                  }}
-                  placeholder="Order Name"
-                  className={`w-full border-2 ${editNameError ? 'border-red-500' : 'border-black dark:border-white'} p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20`}
-                />
-                {editNameError && (
-                  <div className="bg-[#BE5103] text-sm mt-1">{editNameError}</div>
-                )}
-              </div>
-
-              <div>
-                <input
-                  type="number"
-                  value={editOrderValue}
-                  onChange={(e) => setEditOrderValue(e.target.value)}
-                  placeholder="Amount"
-                  className="w-full border-2 border-black dark:border-white p-3 rounded-lg bg-white/50 dark:bg-gray-700 font-mono dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/20"
-                />
-              </div>
-
-              <div className="border-2 border-black dark:border-white p-4 rounded-lg bg-white/50 dark:bg-gray-700">
-                <p className="font-bold mb-3">Select people to split with:</p>
-                <div className="flex flex-wrap gap-2">
-                  {people.map((person, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setEditSelectedPeople(prev =>
-                          prev.includes(person.name)
-                            ? prev.filter(n => n !== person.name)
-                            : [...prev, person.name]
-                        );
-                      }}
-                      className={`px-4 py-2 rounded-lg font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-                        editSelectedPeople.includes(person.name)
-                          ? 'bg-[#829aff] text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                          : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-                      }`}
-                    >
-                      {person.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-2 border-black dark:border-white p-4 rounded-lg bg-white/50 dark:bg-gray-700">
-                <p className="font-bold mb-3">Who paid for this order?</p>
-                <div className="flex flex-wrap gap-2">
-                  {people.map((person, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setEditSelectedPayer(person.name)}
-                      className={`px-4 py-2 rounded-lg font-mono border-2 border-black dark:border-white transition-all duration-150 ease-in-out ${
-                        editSelectedPayer === person.name
-                          ? 'bg-green-500 text-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]'
-                          : 'bg-white/80 dark:bg-[#FBFFE9] shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] hover:shadow-[4px_4px_0px_0px_black] dark:hover:shadow-[4px_4px_0px_0px_white]'
-                      }`}
-                    >
-                      {person.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => {
-                    setEditingOrder(null);
-                    setEditOrderName('');
-                    setEditOrderValue('');
-                    setEditSelectedPeople([]);
-                    setEditSelectedPayer('');
-                    setEditNameError('');
-                  }}
-                  className="bg-gray-500 text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={!editOrderName || !editOrderValue || editSelectedPeople.length === 0 || !editSelectedPayer}
-                  className="bg-[#829aff] text-white px-6 py-2 font-mono border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all duration-150 ease-in-out disabled:bg-gray-400 disabled:shadow-none"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Footer */}
+      <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
+        <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
+        <p className="mt-1">Made with 💖 by Pui</p>
+      </footer>
     </div>
   );
 }

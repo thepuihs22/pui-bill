@@ -1,4 +1,5 @@
 import { Space_Grotesk } from 'next/font/google';
+import Image from 'next/image';
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'],
@@ -31,11 +32,14 @@ const Contact = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {teamMembers.map((member, index) => (
             <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-[1.02]">
-              <div className="relative w-full">
-                <img
+              <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]">
+                <Image
                   src={member.image}
                   alt={member.name}
-                  className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  priority={index === 0}
                 />
               </div>
               <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-[#111827]">

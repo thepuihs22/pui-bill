@@ -146,6 +146,31 @@ export default function SharePage() {
                 })}
               </div>
             </div>
+
+             {/* Payment Instructions */}
+        <div className="mt-6">
+          <h3 className="font-bold text-lg mb-3">Payment Instructions</h3>
+          {(() => {
+            const paymentDetails = calculatePaymentDetails([...peopleWithCalculatedValues]);
+            if (paymentDetails.length === 0) {
+              return <p className="text-green-600">All payments are settled!</p>;
+            }
+            return (
+              <div className="space-y-2">
+                {paymentDetails.map((payment, index) => (
+                  <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-md border border-black dark:border-white">
+                    <p className="font-bold">
+                      {payment.from} should pay {payment.to}
+                    </p>
+                    <p className="text-lg">
+                      Amount: {formatNumber(payment.amount)} THB
+                    </p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
           </div>
         )}
 

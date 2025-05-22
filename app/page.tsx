@@ -8,7 +8,6 @@ import OurProject from './components/OurProject';
 import AboutUs from './components/AboutUs';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
-import FutureBoard from './components/FutureBoard';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('company');
