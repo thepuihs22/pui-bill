@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 
 const FutureBoard = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -13,6 +14,7 @@ const FutureBoard = () => {
   useEffect(() => {
     if (!mountRef.current) return;
 
+    const mount = mountRef.current;  // Capture ref value
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xFBFFE9);
@@ -27,7 +29,7 @@ const FutureBoard = () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    mountRef.current.appendChild(renderer.domElement);
+    mount.appendChild(renderer.domElement);
 
     // Lighting
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
@@ -61,11 +63,11 @@ const FutureBoard = () => {
 
     // Font loading
     const fontLoader = new FontLoader();
-    fontLoader.load('/fonts/helvetiker_regular.typeface.json', (font) => {
+    fontLoader.load('/fonts/helvetiker_regular.typeface.json', (font: Font) => {
       const textGeometry = new TextGeometry(text, {
         font: font,
         size: size,
-        height: depth,
+        depth: depth,
         curveSegments: curveSegments,
         bevelThickness: bevelThickness,
         bevelSize: bevelSize,
@@ -104,7 +106,7 @@ const FutureBoard = () => {
       document.removeEventListener('pointerup', onPointerUp);
     };
 
-    mountRef.current.addEventListener('pointerdown', onPointerDown);
+    mount.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
 
@@ -133,9 +135,7 @@ const FutureBoard = () => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (mountRef.current) {
-        mountRef.current.removeEventListener('pointerdown', onPointerDown);
-      }
+      mount.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerup', onPointerUp);
       renderer.dispose();
