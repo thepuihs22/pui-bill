@@ -10,26 +10,45 @@ const FutureBoard = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<THREE.Group | null>(null);
   const textMeshRef = useRef<THREE.Mesh | null>(null);
+  const animationFrameRef = useRef<number | undefined>(undefined);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const targetRotationRef = useRef<number>(0);
+  const targetRotationOnPointerDownRef = useRef<number>(0);
+  const pointerXRef = useRef<number>(0);
+  const pointerXOnPointerDownRef = useRef<number>(0);
+  const mouseXRef = useRef<number>(0);
+  const mouseYRef = useRef<number>(0);
+  const windowHalfXRef = useRef<number>(0);
+  const windowHalfYRef = useRef<number>(0);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    const mount = mountRef.current;  // Capture ref value
+    // Initialize window-related values
+    windowHalfXRef.current = window.innerWidth / 2;
+    windowHalfYRef.current = window.innerHeight / 2;
+
+    const mount = mountRef.current;
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xFBFFE9);
     scene.fog = new THREE.Fog(0xFBFFE9, 250, 1400);
+    sceneRef.current = scene;
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1500);
     camera.position.set(0, 400, 700);
     const cameraTarget = new THREE.Vector3(0, 150, 0);
+    cameraRef.current = camera;
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     mount.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
 
     // Lighting
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
@@ -55,10 +74,10 @@ const FutureBoard = () => {
 
     // Text parameters
     const text = 'FUTUREBOARD';
-    const depth = 10;
+    const depth = 5;
     const size = 50;
     const curveSegments = 4;
-    const bevelThickness = 1;
+    const bevelThickness = 2;
     const bevelSize = 0.5;
 
     // Font loading
@@ -84,21 +103,17 @@ const FutureBoard = () => {
     });
 
     // Animation
-    let targetRotation = 0;
-    let targetRotationOnPointerDown = 0;
-    let pointerX = 0;
-    let pointerXOnPointerDown = 0;
     const windowHalfX = window.innerWidth / 2;
 
     const onPointerDown = (event: PointerEvent) => {
-      pointerXOnPointerDown = event.clientX - windowHalfX;
-      targetRotationOnPointerDown = targetRotation;
+      pointerXOnPointerDownRef.current = event.clientX - windowHalfX;
+      targetRotationOnPointerDownRef.current = targetRotationRef.current;
     };
 
     const onPointerMove = (event: PointerEvent) => {
       if (event.isPrimary === false) return;
-      pointerX = event.clientX - windowHalfX;
-      targetRotation = targetRotationOnPointerDown + (pointerX - pointerXOnPointerDown) * 0.02;
+      pointerXRef.current = event.clientX - windowHalfX;
+      targetRotationRef.current = targetRotationOnPointerDownRef.current + (pointerXRef.current - pointerXOnPointerDownRef.current) * 0.02;
     };
 
     const onPointerUp = () => {
@@ -110,24 +125,57 @@ const FutureBoard = () => {
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
 
+    // Mouse move handler
+    const onMouseMove = (event: MouseEvent) => {
+      mouseXRef.current = (event.clientX - windowHalfXRef.current) * 0.5;
+      mouseYRef.current = (event.clientY - windowHalfYRef.current) * 0.5;
+    };
+
+    // Touch move handler
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        mouseXRef.current = (event.touches[0].clientX - windowHalfXRef.current) * 0.5;
+        mouseYRef.current = (event.touches[0].clientY - windowHalfYRef.current) * 0.5;
+      }
+    };
+
+    mount.addEventListener('mousemove', onMouseMove);
+    mount.addEventListener('touchmove', onTouchMove);
+
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(animate);
 
       if (groupRef.current) {
-        groupRef.current.rotation.y += (targetRotation - groupRef.current.rotation.y) * 0.05;
+        // Smooth rotation based on mouse X position
+        groupRef.current.rotation.y += (targetRotationRef.current - groupRef.current.rotation.y) * 0.05;
+        
+        // Add tilt effect based on mouse position
+        groupRef.current.rotation.x += (mouseYRef.current * 0.0005 - groupRef.current.rotation.x) * 0.05;
+        groupRef.current.rotation.z += (mouseXRef.current * 0.0005 - groupRef.current.rotation.z) * 0.05;
+
+        // Add subtle floating movement
+        groupRef.current.position.y = 100 + Math.sin(Date.now() * 0.001) * 5;
+        groupRef.current.position.x = mouseXRef.current * 0.1;
+        groupRef.current.position.z = mouseYRef.current * 0.1;
       }
 
-      camera.lookAt(cameraTarget);
-      renderer.render(scene, camera);
+      if (cameraRef.current && sceneRef.current && rendererRef.current) {
+        cameraRef.current.lookAt(cameraTarget);
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
     };
 
     animate();
 
     // Handle window resize
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (cameraRef.current && rendererRef.current) {
+        cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+        windowHalfXRef.current = window.innerWidth / 2;
+        windowHalfYRef.current = window.innerHeight / 2;
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -135,10 +183,18 @@ const FutureBoard = () => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      mount.removeEventListener('mousemove', onMouseMove);
+      mount.removeEventListener('touchmove', onTouchMove);
       mount.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerup', onPointerUp);
-      renderer.dispose();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+        mount.removeChild(rendererRef.current.domElement);
+      }
     };
   }, []);
 
