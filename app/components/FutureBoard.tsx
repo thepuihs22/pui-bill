@@ -22,6 +22,9 @@ const FutureBoard = () => {
   const mouseYRef = useRef<number>(0);
   const windowHalfXRef = useRef<number>(0);
   const windowHalfYRef = useRef<number>(0);
+  const wavePlaneRef = useRef<THREE.Mesh | null>(null);
+  const countRef = useRef<number>(0);
+  const isPointerDownRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -38,7 +41,7 @@ const FutureBoard = () => {
     sceneRef.current = scene;
 
     // Camera setup
-    const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1500);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1500);
     camera.position.set(0, 400, 700);
     const cameraTarget = new THREE.Vector3(0, 150, 0);
     cameraRef.current = camera;
@@ -49,6 +52,33 @@ const FutureBoard = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
+
+    // Create wave plane
+    const vertexHeight = 600;
+    const planeDefinition = 25;
+    const planeSize = Math.max(window.innerWidth, window.innerHeight) * 2; // Make plane responsive to screen size
+    const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition);
+    const plane = new THREE.Mesh(
+      planeGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x111827,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.3
+      })
+    );
+    plane.rotation.x -= Math.PI * 0.5;
+    plane.position.y = -100;
+    scene.add(plane);
+    wavePlaneRef.current = plane;
+
+    // Initialize wave vertices
+    for (let i = 0; i < planeGeo.attributes.position.count; i++) {
+      const originalZ = planeGeo.attributes.position.getZ(i);
+      planeGeo.attributes.position.setZ(i, originalZ + Math.random() * vertexHeight - vertexHeight);
+      planeGeo.attributes.position.setY(i, planeGeo.attributes.position.getZ(i));
+    }
+    planeGeo.attributes.position.needsUpdate = true;
 
     // Lighting
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
@@ -62,7 +92,7 @@ const FutureBoard = () => {
 
     // Material
     const material = new THREE.MeshPhongMaterial({ 
-      color: 0xffffff, 
+      color: 0x111827, 
       flatShading: false 
     });
 
@@ -74,11 +104,12 @@ const FutureBoard = () => {
 
     // Text parameters
     const text = 'FUTUREBOARD';
-    const depth = 5;
-    const size = 50;
-    const curveSegments = 4;
-    const bevelThickness = 2;
-    const bevelSize = 0.5;
+    const depth = 20;
+    const size = 100;
+    const curveSegments = 6;
+    const bevelThickness = 4;
+    const bevelSize = 1;
+    const bevelEnabled = true;
 
     // Font loading
     const fontLoader = new FontLoader();
@@ -90,7 +121,7 @@ const FutureBoard = () => {
         curveSegments: curveSegments,
         bevelThickness: bevelThickness,
         bevelSize: bevelSize,
-        bevelEnabled: true
+        bevelEnabled: bevelEnabled
       });
 
       textGeometry.computeBoundingBox();
@@ -106,19 +137,19 @@ const FutureBoard = () => {
     const windowHalfX = window.innerWidth / 2;
 
     const onPointerDown = (event: PointerEvent) => {
+      isPointerDownRef.current = true;
       pointerXOnPointerDownRef.current = event.clientX - windowHalfX;
       targetRotationOnPointerDownRef.current = targetRotationRef.current;
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      if (event.isPrimary === false) return;
+      if (!isPointerDownRef.current) return;
       pointerXRef.current = event.clientX - windowHalfX;
       targetRotationRef.current = targetRotationOnPointerDownRef.current + (pointerXRef.current - pointerXOnPointerDownRef.current) * 0.02;
     };
 
     const onPointerUp = () => {
-      document.removeEventListener('pointermove', onPointerMove);
-      document.removeEventListener('pointerup', onPointerUp);
+      isPointerDownRef.current = false;
     };
 
     mount.addEventListener('pointerdown', onPointerDown);
@@ -144,6 +175,20 @@ const FutureBoard = () => {
 
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
+
+      // Update wave animation
+      if (wavePlaneRef.current) {
+        const geometry = wavePlaneRef.current.geometry;
+        const positions = geometry.attributes.position;
+        const count = positions.count;
+
+        for (let i = 0; i < count; i++) {
+          const originalZ = positions.getY(i);
+          positions.setZ(i, originalZ + Math.sin(i * 0.1 + countRef.current * 0.01) * 50);
+        }
+        positions.needsUpdate = true;
+        countRef.current += 0.5;
+      }
 
       if (groupRef.current) {
         // Smooth rotation based on mouse X position
@@ -175,6 +220,23 @@ const FutureBoard = () => {
         rendererRef.current.setSize(window.innerWidth, window.innerHeight);
         windowHalfXRef.current = window.innerWidth / 2;
         windowHalfYRef.current = window.innerHeight / 2;
+
+        // Update wave plane size on resize
+        if (wavePlaneRef.current) {
+          const newPlaneSize = Math.max(window.innerWidth, window.innerHeight) * 2;
+          const newGeometry = new THREE.PlaneGeometry(newPlaneSize, newPlaneSize, planeDefinition, planeDefinition);
+          
+          // Initialize new wave vertices
+          for (let i = 0; i < newGeometry.attributes.position.count; i++) {
+            const originalZ = newGeometry.attributes.position.getZ(i);
+            newGeometry.attributes.position.setZ(i, originalZ + Math.random() * vertexHeight - vertexHeight);
+            newGeometry.attributes.position.setY(i, newGeometry.attributes.position.getZ(i));
+          }
+          newGeometry.attributes.position.needsUpdate = true;
+          
+          wavePlaneRef.current.geometry.dispose();
+          wavePlaneRef.current.geometry = newGeometry;
+        }
       }
     };
 

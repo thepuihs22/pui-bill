@@ -8,7 +8,7 @@ const HowWeWork = () => {
     {
       title: "Hello",
       image: "/images/hello.svg",
-      description: "The first people you will meet are our business, UX and technology experts."
+      description: "Futureboard began as a tech consulting and software development partner, and while we still offer those services, our focus has shifted toward creating simple, everyday tools that anyone can use.Our first products include a bill-splitting app and a resume optimizer that helps job seekers tailor their resumes to job posts online. We’re all about making tech more accessible — building smart, easy-to-use solutions that fit seamlessly into daily life"
     },
     {
       title: "Research and reach",
