@@ -14,14 +14,14 @@ const Contact = () => {
       image: "/images/c.jpg"
     },
     {
-      name: "Kor",
-      role: "Chief technology officer (CTO)",
-      image: "/images/k.jpg"
-    },
-    {
       name: "Pui",
       role: "Chief executive officer (CEO)",
       image: "/images/p.jpg"
+    },
+    {
+      name: "Kor",
+      role: "Chief technology officer (CTO)",
+      image: "/images/k.jpg"
     }
   ];
 
