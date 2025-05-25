@@ -11,7 +11,7 @@ const OurProject = () => {
     },
     {
       title: "Jobseekr",
-      description: "An AI-powered CV optimization platform that transforms your resume to match job descriptions. Simply upload your CV and paste a job posting, and our AI will help tailor your experience to highlight relevant skills and achievements.",
+      description: "Align Your Resume. Accelerate Your Career.Generic resumes miss opportunities. By analyzing your current profile against job-specific requirements, we help you present your most relevant strengths—positioning you as the ideal candidate every time.",
       icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' /%3E%3C/svg%3E",
       link: "https://jobseekr.futureboard.xyz/"
     },
