@@ -382,35 +382,8 @@ export default function Bill() {
 
       const shareUrl = `${window.location.origin}/bill/share/${currentBillId}`;
       
-      // Try to use the Web Share API if available (works on mobile)
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Bill Share',
-            text: 'Check out this bill!',
-            url: shareUrl,
-          });
-          return;
-        } catch (shareError) {
-          console.log('Share failed:', shareError);
-          // Fall back to clipboard if share fails
-        }
-      }
-
-      // Fallback to clipboard
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success('Share link copied to clipboard!');
-      } catch (clipboardError) {
-        console.error('Clipboard failed:', clipboardError);
-        // If clipboard fails, just show the URL
-        toast.success(`Share URL: ${shareUrl}`);
-      }
-      
-      // Open in new tab only if not on mobile
-      if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        window.open(shareUrl, '_blank');
-      }
+      // Navigate to the share page
+      window.location.href = shareUrl;
     } catch (error) {
       console.error('Error sharing bill:', error);
       toast.error('Failed to generate share link. Please try saving the bill again.');

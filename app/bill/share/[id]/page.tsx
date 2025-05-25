@@ -103,6 +103,7 @@ export default function SharedBill() {
   const [error, setError] = useState<string | null>(null);
   const [shareData, setShareData] = useState<ShareData | null>(null);
   const [copiedPromptpay, setCopiedPromptpay] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   const handleCopyPromptpay = (promptpay: string) => {
     navigator.clipboard.writeText(promptpay);
@@ -132,6 +133,11 @@ export default function SharedBill() {
         const data = await response.json();
         console.log(data);
         setShareData(data);
+        
+        // Check if current user is the owner
+        const savedShareId = localStorage.getItem('billShareId');
+        setIsOwner(savedShareId === params.id);
+        
         toast.success('Bill loaded successfully');
       } catch (error) {
         console.error('Error loading shared bill:', error);
@@ -325,7 +331,15 @@ export default function SharedBill() {
         Generated on: {new Date(shareData.timestamp).toLocaleString()}
       </div>
 
-      <div className="mt-6 text-center">
+      <div className="mt-6 text-center space-y-4">
+        {isOwner && (
+          <Link 
+            href={`/bill?id=${params.id}`}
+            className="inline-block bg-green-500 text-white px-6 py-2 border-2 border-black dark:border-white rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all mr-4"
+          >
+            Edit Bill
+          </Link>
+        )}
         <Link 
           href="/" 
           className="inline-block bg-[#829aff] text-white px-6 py-2 border-2 border-black dark:border-white rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all"
