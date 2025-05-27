@@ -34,16 +34,16 @@ const FutureBoard = () => {
     windowHalfYRef.current = window.innerHeight / 2;
 
     const mount = mountRef.current;
-    // Scene setup
+    // Scene setup - adjust fog for better visibility
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xFBFFE9);
-    scene.fog = new THREE.Fog(0xFBFFE9, 250, 1400);
+    scene.background = new THREE.Color(0xFBFFE9); // Your original light background
+    scene.fog = new THREE.Fog(0xFBFFE9, 50000, 200000); // Much further fog distances
     sceneRef.current = scene;
 
     // Camera setup
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1500);
-    camera.position.set(0, 400, 700);
-    const cameraTarget = new THREE.Vector3(0, 150, 0);
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 400000);
+    camera.position.set(0, 10000, 10000);
+    const cameraTarget = new THREE.Vector3(0, 8000, 0);
     cameraRef.current = camera;
 
     // Renderer setup
@@ -53,32 +53,35 @@ const FutureBoard = () => {
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Create wave plane
-    const vertexHeight = 600;
-    const planeDefinition = 25;
-    const planeSize = Math.max(window.innerWidth, window.innerHeight) * 2; // Make plane responsive to screen size
+    // Create wave plane - make it more visible against light background
+    const vertexHeight = 15000;
+    const planeDefinition = 100;
+    const planeSize = 1245000;
     const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition);
     const plane = new THREE.Mesh(
       planeGeo,
       new THREE.MeshBasicMaterial({
-        color: 0x111827,
+        color: 0x000000, // Pure black for better contrast
         wireframe: true,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.8 // Increased opacity for better visibility
       })
     );
     plane.rotation.x -= Math.PI * 0.5;
-    plane.position.y = -100;
     scene.add(plane);
     wavePlaneRef.current = plane;
 
-    // Initialize wave vertices
-    for (let i = 0; i < planeGeo.attributes.position.count; i++) {
-      const originalZ = planeGeo.attributes.position.getZ(i);
-      planeGeo.attributes.position.setZ(i, originalZ + Math.random() * vertexHeight - vertexHeight);
-      planeGeo.attributes.position.setY(i, planeGeo.attributes.position.getZ(i));
+    // Initialize wave vertices - store original Z positions
+    const positions = planeGeo.attributes.position;
+    const originalZPositions: number[] = [];
+    
+    for (let i = 0; i < positions.count; i++) {
+      const randomOffset = Math.random() * vertexHeight - vertexHeight;
+      const originalZ = positions.getZ(i) + randomOffset;
+      positions.setZ(i, originalZ);
+      originalZPositions[i] = originalZ; // Store original position
     }
-    planeGeo.attributes.position.needsUpdate = true;
+    positions.needsUpdate = true;
 
     // Lighting
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
@@ -90,25 +93,25 @@ const FutureBoard = () => {
     dirLight2.color.setHSL(Math.random(), 1, 0.5, THREE.SRGBColorSpace);
     scene.add(dirLight2);
 
-    // Material
+    // Material - make text more visible
     const material = new THREE.MeshPhongMaterial({ 
-      color: 0x111827, 
+      color: 0x000000, // Pure black for better contrast against light background
       flatShading: false 
     });
 
-    // Group for text
+    // Group for text - position it much higher and further to be visible with new camera
     const group = new THREE.Group();
-    group.position.y = 100;
+    group.position.y = 8000;
     scene.add(group);
     groupRef.current = group;
 
-    // Text parameters
+    
     const text = 'FUTUREBOARD';
-    const depth = 20;
-    const size = 100;
+    const depth = 200; 
+    const size = 1000; 
     const curveSegments = 6;
-    const bevelThickness = 4;
-    const bevelSize = 1;
+    const bevelThickness = 40;
+    const bevelSize = 10;
     const bevelEnabled = true;
 
     // Font loading
@@ -176,18 +179,28 @@ const FutureBoard = () => {
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
 
-      // Update wave animation
+      // Camera rotation (like in Svelte version)
+      if (cameraRef.current) {
+        const x = cameraRef.current.position.x;
+        const z = cameraRef.current.position.z;
+        cameraRef.current.position.x = x * Math.cos(0.001) + z * Math.sin(0.001) - 10;
+        cameraRef.current.position.z = z * Math.cos(0.001) - x * Math.sin(0.001) - 10;
+        cameraRef.current.lookAt(new THREE.Vector3(0, 11000, 0));
+      }
+
+      // Update wave animation (matching Svelte logic)
       if (wavePlaneRef.current) {
         const geometry = wavePlaneRef.current.geometry;
         const positions = geometry.attributes.position;
         const count = positions.count;
 
         for (let i = 0; i < count; i++) {
-          const originalZ = positions.getY(i);
-          positions.setZ(i, originalZ + Math.sin(i * 0.1 + countRef.current * 0.01) * 50);
+          const originalZ = originalZPositions[i];
+          const waveZ = Math.sin((i + countRef.current * 0.00002)) * (originalZ - (originalZ * 0.7));
+          positions.setZ(i, waveZ);
         }
         positions.needsUpdate = true;
-        countRef.current += 0.5;
+        countRef.current += 0.1;
       }
 
       if (groupRef.current) {
@@ -198,10 +211,10 @@ const FutureBoard = () => {
         groupRef.current.rotation.x += (mouseYRef.current * 0.0005 - groupRef.current.rotation.x) * 0.05;
         groupRef.current.rotation.z += (mouseXRef.current * 0.0005 - groupRef.current.rotation.z) * 0.05;
 
-        // Add subtle floating movement
-        groupRef.current.position.y = 100 + Math.sin(Date.now() * 0.001) * 5;
-        groupRef.current.position.x = mouseXRef.current * 0.1;
-        groupRef.current.position.z = mouseYRef.current * 0.1;
+        // Add subtle floating movement - scaled for new position
+        groupRef.current.position.y = 8000 + Math.sin(Date.now() * 0.001) * 50; // Increased from 5 to 50
+        groupRef.current.position.x = mouseXRef.current * 1; // Increased from 0.1 to 1
+        groupRef.current.position.z = mouseYRef.current * 1; // Increased from 0.1 to 1
       }
 
       if (cameraRef.current && sceneRef.current && rendererRef.current) {
@@ -212,7 +225,7 @@ const FutureBoard = () => {
 
     animate();
 
-    // Handle window resize
+    // Handle window resize - FIXED VERSION
     const handleResize = () => {
       if (cameraRef.current && rendererRef.current) {
         cameraRef.current.aspect = window.innerWidth / window.innerHeight;
@@ -221,21 +234,11 @@ const FutureBoard = () => {
         windowHalfXRef.current = window.innerWidth / 2;
         windowHalfYRef.current = window.innerHeight / 2;
 
-        // Update wave plane size on resize
+        // Simply scale the existing plane instead of recreating geometry
         if (wavePlaneRef.current) {
-          const newPlaneSize = Math.max(window.innerWidth, window.innerHeight) * 2;
-          const newGeometry = new THREE.PlaneGeometry(newPlaneSize, newPlaneSize, planeDefinition, planeDefinition);
-          
-          // Initialize new wave vertices
-          for (let i = 0; i < newGeometry.attributes.position.count; i++) {
-            const originalZ = newGeometry.attributes.position.getZ(i);
-            newGeometry.attributes.position.setZ(i, originalZ + Math.random() * vertexHeight - vertexHeight);
-            newGeometry.attributes.position.setY(i, newGeometry.attributes.position.getZ(i));
-          }
-          newGeometry.attributes.position.needsUpdate = true;
-          
-          wavePlaneRef.current.geometry.dispose();
-          wavePlaneRef.current.geometry = newGeometry;
+          const scaleX = Math.max(window.innerWidth / 1920, 1);
+          const scaleZ = Math.max(window.innerHeight / 1080, 1);
+          wavePlaneRef.current.scale.set(scaleX, 1, scaleZ);
         }
       }
     };
