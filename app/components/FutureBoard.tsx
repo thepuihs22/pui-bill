@@ -10,6 +10,7 @@ const FutureBoard = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<THREE.Group | null>(null);
   const textMeshRef = useRef<THREE.Mesh | null>(null);
+  const wireframeRef = useRef<THREE.LineSegments | null>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -25,6 +26,78 @@ const FutureBoard = () => {
   const wavePlaneRef = useRef<THREE.Mesh | null>(null);
   const countRef = useRef<number>(0);
   const isPointerDownRef = useRef<boolean>(false);
+  const originalZPositionsRef = useRef<number[]>([]);
+  const fontRef = useRef<Font | null>(null);
+  const materialRef = useRef<THREE.MeshPhongMaterial | null>(null);
+
+  // Function to calculate responsive text size
+  const getResponsiveTextSize = () => {
+    const baseSize = 1000;
+    const minSize = 400;
+    const maxSize = 1200;
+    
+    // Calculate size based on screen width
+    const screenWidth = window.innerWidth;
+    const scaleFactor = Math.min(Math.max(screenWidth / 1920, 0.5), 1.5);
+    
+    return Math.min(Math.max(baseSize * scaleFactor, minSize), maxSize);
+  };
+
+  // Function to create text geometry with responsive sizing
+  const createTextGeometry = (font: Font) => {
+    const text = '< Build : Future / >';
+    const size = getResponsiveTextSize();
+    const depth = size * 0.25; // Scale depth proportionally
+    const curveSegments = 6;
+    const bevelThickness = size * 0.05; // Scale bevel proportionally
+    const bevelSize = size * 0.0125; // Scale bevel size proportionally
+    const bevelEnabled = true;
+
+    return new TextGeometry(text, {
+      font: font,
+      size: size,
+      depth: depth,
+      curveSegments: curveSegments,
+      bevelThickness: bevelThickness,
+      bevelSize: bevelSize,
+      bevelEnabled: bevelEnabled
+    });
+  };
+
+  // Function to update text geometry
+  const updateTextGeometry = () => {
+    if (!fontRef.current || !groupRef.current || !materialRef.current) return;
+
+    // Remove existing text mesh and wireframe
+    if (textMeshRef.current) {
+      groupRef.current.remove(textMeshRef.current);
+      textMeshRef.current.geometry.dispose();
+      textMeshRef.current = null;
+    }
+    if (wireframeRef.current) {
+      groupRef.current.remove(wireframeRef.current);
+      wireframeRef.current.geometry.dispose();
+      wireframeRef.current = null;
+    }
+
+    // Create new geometry with responsive size
+    const textGeometry = createTextGeometry(fontRef.current);
+    textGeometry.computeBoundingBox();
+    const textWidth = textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x;
+    textGeometry.translate(-textWidth / 2, 0, 0);
+
+    // Create new text mesh
+    const textMesh = new THREE.Mesh(textGeometry, materialRef.current);
+    groupRef.current.add(textMesh);
+    textMeshRef.current = textMesh;
+
+    // Add black borders to the edges of the text geometry
+    const edges = new THREE.EdgesGeometry(textGeometry);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+    const wireframe = new THREE.LineSegments(edges, lineMaterial);
+    groupRef.current.add(wireframe);
+    wireframeRef.current = wireframe;
+  };
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -81,6 +154,7 @@ const FutureBoard = () => {
       positions.setZ(i, originalZ);
       originalZPositions[i] = originalZ; // Store original position
     }
+    originalZPositionsRef.current = originalZPositions; // Store in ref for animation access
     positions.needsUpdate = true;
 
     // Lighting
@@ -90,50 +164,29 @@ const FutureBoard = () => {
 
     const dirLight2 = new THREE.DirectionalLight(0xffffff, 2);
     dirLight2.position.set(0, 30, 10).normalize();
-    dirLight2.color.setHSL(Math.random(), 1, 0.5, THREE.SRGBColorSpace);
     scene.add(dirLight2);
 
     // Material - make text more visible
     const material = new THREE.MeshPhongMaterial({ 
-      color: 0x000000, // Pure black for better contrast against light background
-      flatShading: false 
+      color: '#CAFA77', // Blue color (you can change this to any hex color)
+      emissive: '#CAFA77', // Subtle blue glow
+      specular: '#CAFA77', // Specular highlights
+      shininess: 0, // How shiny the surface is
+      flatShading: true 
     });
+    materialRef.current = material;
 
-    // Group for text - position it much higher and further to be visible with new camera
+    // Group for text - position it at a fixed location
     const group = new THREE.Group();
-    group.position.y = 8000;
+    group.position.set(0, 8000, 0); // Fixed position in world space
     scene.add(group);
     groupRef.current = group;
 
-    
-    const text = 'FUTUREBOARD';
-    const depth = 200; 
-    const size = 1000; 
-    const curveSegments = 6;
-    const bevelThickness = 40;
-    const bevelSize = 10;
-    const bevelEnabled = true;
-
     // Font loading
     const fontLoader = new FontLoader();
-    fontLoader.load('/fonts/helvetiker_regular.typeface.json', (font: Font) => {
-      const textGeometry = new TextGeometry(text, {
-        font: font,
-        size: size,
-        depth: depth,
-        curveSegments: curveSegments,
-        bevelThickness: bevelThickness,
-        bevelSize: bevelSize,
-        bevelEnabled: bevelEnabled
-      });
-
-      textGeometry.computeBoundingBox();
-      const textWidth = textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x;
-      textGeometry.translate(-textWidth / 2, 0, 0);
-
-      const textMesh = new THREE.Mesh(textGeometry, material);
-      group.add(textMesh);
-      textMeshRef.current = textMesh;
+    fontLoader.load('/fonts/orbitron_bold.json', (font: Font) => {
+      fontRef.current = font;
+      updateTextGeometry();
     });
 
     // Animation
@@ -155,9 +208,9 @@ const FutureBoard = () => {
       isPointerDownRef.current = false;
     };
 
-    mount.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
+    // mount.addEventListener('pointerdown', onPointerDown);
+    // document.addEventListener('pointermove', onPointerMove);
+    // document.addEventListener('pointerup', onPointerUp);
 
     // Mouse move handler
     const onMouseMove = (event: MouseEvent) => {
@@ -173,48 +226,47 @@ const FutureBoard = () => {
       }
     };
 
-    mount.addEventListener('mousemove', onMouseMove);
-    mount.addEventListener('touchmove', onTouchMove);
+    // mount.addEventListener('mousemove', onMouseMove);
+    // mount.addEventListener('touchmove', onTouchMove);
 
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
 
       // Camera rotation (like in Svelte version)
-      if (cameraRef.current) {
-        const x = cameraRef.current.position.x;
-        const z = cameraRef.current.position.z;
-        cameraRef.current.position.x = x * Math.cos(0.001) + z * Math.sin(0.001) - 10;
-        cameraRef.current.position.z = z * Math.cos(0.001) - x * Math.sin(0.001) - 10;
-        cameraRef.current.lookAt(new THREE.Vector3(0, 11000, 0));
-      }
+      // if (cameraRef.current) {
+      //   const x = cameraRef.current.position.x;
+      //   const z = cameraRef.current.position.z;
+      //   cameraRef.current.position.x = x * Math.cos(0.001) + z * Math.sin(0.001) - 10;
+      //   cameraRef.current.position.z = z * Math.cos(0.001) - x * Math.sin(0.001) - 10;
+      //   cameraRef.current.lookAt(new THREE.Vector3(0, 11000, 0));
+      // }
 
       // Update wave animation (matching Svelte logic)
       if (wavePlaneRef.current) {
+        // console.log('wavePlaneRef.current', wavePlaneRef.current);
         const geometry = wavePlaneRef.current.geometry;
         const positions = geometry.attributes.position;
         const count = positions.count;
 
         for (let i = 0; i < count; i++) {
-          const originalZ = originalZPositions[i];
-          const waveZ = Math.sin((i + countRef.current * 0.00002)) * (originalZ - (originalZ * 0.7));
+          const originalZ = originalZPositionsRef.current[i];
+          const waveZ = Math.sin((i * 0.01 + countRef.current * 0.02)) * (originalZ * 0.5);
           positions.setZ(i, waveZ);
         }
         positions.needsUpdate = true;
-        countRef.current += 0.1;
+        countRef.current += 1;
       }
 
       if (groupRef.current) {
-        // Smooth rotation based on mouse X position
+        // Apply mouse-based rotations only
         groupRef.current.rotation.y += (targetRotationRef.current - groupRef.current.rotation.y) * 0.05;
-        
-        // Add tilt effect based on mouse position
         groupRef.current.rotation.x += (mouseYRef.current * 0.0005 - groupRef.current.rotation.x) * 0.05;
         groupRef.current.rotation.z += (mouseXRef.current * 0.0005 - groupRef.current.rotation.z) * 0.05;
 
-        // Add subtle floating movement - scaled for new position
-        groupRef.current.position.y = 8000 + Math.sin(Date.now() * 0.001) * 50; // Increased from 5 to 50
-        groupRef.current.position.x = mouseXRef.current * 1; // Increased from 0.1 to 1
-        groupRef.current.position.z = mouseYRef.current * 1; // Increased from 0.1 to 1
+        // Add subtle floating movement relative to the fixed base position
+        groupRef.current.position.y = 8000 + Math.sin(Date.now() * 0.001) * 50;
+        groupRef.current.position.x = mouseXRef.current * 1;
+        groupRef.current.position.z = mouseYRef.current * 1;
       }
 
       if (cameraRef.current && sceneRef.current && rendererRef.current) {
@@ -225,7 +277,7 @@ const FutureBoard = () => {
 
     animate();
 
-    // Handle window resize - FIXED VERSION
+    // Handle window resize - UPDATED VERSION with text responsiveness
     const handleResize = () => {
       if (cameraRef.current && rendererRef.current) {
         cameraRef.current.aspect = window.innerWidth / window.innerHeight;
@@ -240,6 +292,9 @@ const FutureBoard = () => {
           const scaleZ = Math.max(window.innerHeight / 1080, 1);
           wavePlaneRef.current.scale.set(scaleX, 1, scaleZ);
         }
+
+        // Update text geometry for new screen size
+        updateTextGeometry();
       }
     };
 
