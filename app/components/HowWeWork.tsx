@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
+import TimelineSVG from "./TimelineSVG";
 
 const HowWeWork = () => {
   const [selectedStep, setSelectedStep] = useState(0);
@@ -7,42 +8,34 @@ const HowWeWork = () => {
   const steps = [
     {
       title: "Hello",
-      image: "/images/hello.svg",
-      description: "Futureboard began as a tech consulting and software development partner, and while we still offer those services, our focus has shifted toward creating simple, everyday tools that anyone can use.Our first products include a bill-splitting app and a resume optimizer that helps job seekers tailor their resumes to job posts online. We’re all about making tech more accessible — building smart, easy-to-use solutions that fit seamlessly into daily life"
+      description: "Futureboard began as a tech consulting and software development partner, and while we still offer those services, our focus has shifted toward creating simple, everyday tools that anyone can use.Our first products include a bill-splitting app and a resume optimizer that helps job seekers tailor their resumes to job posts online. We're all about making tech more accessible — building smart, easy-to-use solutions that fit seamlessly into daily life"
     },
     {
       title: "Research and reach",
-      image: "/images/research.svg",
       description: "It's the first stage, when we start compiling information and building a creative brief that will act as the first draft of the project."
     },
     {
       title: "Design",
-      image: "/images/design.svg",
       description: "Once we understand all aspects of the product, we start designing the interface and user experience. Drawing, framing, designing and animating to create smart and elegant designs"
     },
     {
       title: "Front-end",
-      image: "/images/frontend.svg",
       description: "Every digital product needs a solid multi-platform interface. On this stage we focus on turning out design into tangible pieces, where you can browse and enjoy usability."
     },
     {
       title: "Backend & CMS",
-      image: "/images/backend.svg",
       description: "Designing a scalable and safe management panel, customized to the needs of each client, is our daily business."
     },
     {
       title: "Testing",
-      image: "/images/testing.svg",
       description: "Extensive testing sessions allow us to identify ways of improving the product and help users achieve their objectives in the least amount of time possible."
     },
     {
       title: "Launch",
-      image: "/images/launch.svg",
       description: "We will organize the product's launch."
     },
     {
       title: "Maintenance",
-      image: "/images/maintenance.svg",
       description: "Each project evolves with time. We offer maintenance and periodic updates."
     }
   ];
@@ -57,26 +50,11 @@ const HowWeWork = () => {
         {/* Desktop View */}
         <div className="hidden md:block graph-desktop">
           <div className="flex justify-center mb-8">
-            <Image 
-              src='https://helphumans.digital/wp-content/uploads/2021/08/Investigacio%CC%81n-alcance.svg' 
-              alt='Investigacio%CC%81n-alcance' 
-              width={1000} 
-              height={1000}
-              className="brightness-0 invert"
+            <TimelineSVG
+              steps={steps.length}
+              selectedStep={selectedStep}
+              onStepClick={setSelectedStep}
             />
-          </div>
-          <div className="graph-container flex justify-center mb-8">
-            {steps.map((step, index) => (
-              <div key={index} className="mx-2">
-                {/* <Image
-                  src={step.image}
-                  alt={step.title}
-                  width={100}
-                  height={100}
-                  className={`transition-opacity duration-300 ${selectedStep === index ? 'opacity-100' : 'opacity-50'}`}
-                /> */}
-              </div>
-            ))}
           </div>
 
           <div className="graph-nav flex justify-center mb-8">
@@ -109,12 +87,10 @@ const HowWeWork = () => {
                 {steps.map((step, index) => (
                   <div key={index} className="w-full flex-shrink-0">
                     <div className="flex justify-center mb-8">
-                      <Image 
-                        src='https://helphumans.digital/wp-content/uploads/2021/08/Investigacio%CC%81n-alcance.svg' 
-                        alt='Investigacio%CC%81n-alcance' 
-                        width={1000} 
-                        height={1000}
-                        className="brightness-0 invert"
+                      <TimelineSVG
+                        steps={steps.length}
+                        selectedStep={selectedStep}
+                        onStepClick={setSelectedStep}
                       />
                     </div>
                     <div className="graph-nav flex justify-center mb-8">
