@@ -628,7 +628,7 @@ export default function Bill() {
   return (
     <div className="min-h-screen bg-[#FBFFE9] dark:bg-gray-900 text-gray-800 dark:text-gray">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">Futureboard</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]"> 🍔🍻 Eat & Split 🫄</h1>
 
         <div className="flex mb-6 gap-4 justify-center">
           <button
@@ -946,7 +946,7 @@ export default function Bill() {
 
         <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
           <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
-          <p className="mt-1">Made with 💖 by Futureboard</p>
+          <p className="mt-1">Made with 💖 by <a href="/"  target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Futureboard</a></p>
         </footer>
       </div>
 
