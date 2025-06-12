@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 const AboutUs = () => {
   const [text, setText] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const fullText = "Please try putting something here....";
+  const fullText = "Simple, smart digital products that improve everyday life";
   const sectionRef = useRef(null);
   
   useEffect(() => {
@@ -51,7 +51,7 @@ const AboutUs = () => {
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
         <div className="home-flashback__header">
           <h4 className="home-flashback__title text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center leading-tight">
-           "We transform ideas into digital results to reinvent the connection between clients and the public."
+           "We aim to empower individuals with intuitive tools that simplify tasks, enhance productivity, and help people adapt to a rapidly evolving digital landscape"
           </h4>
           <div className="home-flashback__prompt">
             <div className="prompt">

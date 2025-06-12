@@ -8,6 +8,7 @@ import OurProject from './components/OurProject';
 import AboutUs from './components/AboutUs';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import GoToTop from './components/GoToTop';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('company');
@@ -33,6 +34,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <GoToTop />
     </div>
   );
 }
