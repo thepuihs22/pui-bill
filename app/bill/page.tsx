@@ -625,10 +625,44 @@ export default function Bill() {
     setEditPersonNameError('');
   };
 
+  // Add calculatePaymentDetails function
+  const calculatePaymentDetails = (people: { name: string }[]) => {
+    const balances = people.map(person => ({
+      name: person.name,
+      ...calculatePersonBalance(person.name)
+    }));
+
+    const debtors = balances.filter(p => p.balance < 0).sort((a, b) => a.balance - b.balance);
+    const creditors = balances.filter(p => p.balance > 0).sort((a, b) => b.balance - a.balance);
+
+    const payments = [];
+
+    for (const debtor of debtors) {
+      let remainingDebt = Math.abs(debtor.balance);
+      
+      for (const creditor of creditors) {
+        if (remainingDebt <= 0 || creditor.balance <= 0) continue;
+        
+        const paymentAmount = Math.min(remainingDebt, creditor.balance);
+        if (paymentAmount > 0) {
+          payments.push({
+            from: debtor.name,
+            to: creditor.name,
+            amount: paymentAmount
+          });
+          remainingDebt -= paymentAmount;
+          creditor.balance -= paymentAmount;
+        }
+      }
+    }
+    
+    return payments;
+  };
+
   return (
     <div className="min-h-screen bg-[#FBFFE9] dark:bg-gray-900 text-gray-800 dark:text-gray">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]"> 🍔🍻 Eat & Split 🫄</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">Split & Bill</h1>
 
         <div className="flex mb-6 gap-4 justify-center">
           <button
@@ -863,7 +897,7 @@ export default function Bill() {
                   </button>
                 </div>
               </div>
-              <p className="font-bold text-lg border-b-2 border-black dark:border-white pb-3 flex justify-between">
+              <p className="font-bold text-lg border-b-2 border-black pb-3 flex justify-between">
                 <span>Total Orders:</span>
                 <span>{formatNumber(orders.reduce((sum, order) => sum + order.value, 0))} THB</span>
               </p>
@@ -871,7 +905,7 @@ export default function Bill() {
                 {people.map((person) => {
                   const { paid, owes, balance } = calculatePersonBalance(person.name);
                   return (
-                    <div key={person.name} className="font-mono flex justify-between items-center border-b border-black dark:border-white py-3">
+                    <div key={person.name} className="font-mono flex justify-between items-center border-b border-black py-3">
                       <span>{person.name}</span>
                       <div className="text-right">
                         <div>Paid: {formatNumber(paid)} THB</div>
@@ -883,6 +917,31 @@ export default function Bill() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Add Payment Instructions section */}
+              <div className="mt-6">
+                <h3 className="font-bold text-lg mb-3">Payment Instructions</h3>
+                {(() => {
+                  const paymentDetails = calculatePaymentDetails(people);
+                  if (paymentDetails.length === 0) {
+                    return <p className="font-bold text-blue-800 dark:text-blue-400">All payments are settled!</p>;
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {paymentDetails.map((payment, index) => (
+                        <div key={index} className="bg-white/80 dark:bg-[#FBFFE9] p-3 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white]">
+                          <p className="font-bold">
+                            {payment.from} should pay {payment.to}
+                          </p>
+                          <p className="text-lg">
+                            Amount: {formatNumber(payment.amount)} THB
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
