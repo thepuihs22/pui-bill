@@ -21,6 +21,8 @@ const Navbar = ({ activeSection, onSectionClick }: NavbarProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const sections = ['how-we-work', 'our-projects', 'team']
+
   return (
     <nav className={`fixed top-0 w-full bg-[#e6ff75]/90 backdrop-blur-sm z-50 py-4 border-gray-200 transition-all duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -29,7 +31,7 @@ const Navbar = ({ activeSection, onSectionClick }: NavbarProps) => {
         <div className="flex justify-between items-center">
           <div className="text-2xl font-bold text-gray-800"></div>
           <div className="hidden md:flex space-x-8">
-            {['how-we-work', 'our-projects', 'about-us', 'team'].map((section) => (
+            {sections.map((section) => (
               <button
                 key={section}
                 onClick={() => onSectionClick(section)}
