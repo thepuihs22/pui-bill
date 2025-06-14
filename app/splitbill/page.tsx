@@ -92,7 +92,7 @@ export default function Bill() {
       if (savedShareId) {
         // If we have a saved bill ID, load the data
         try {
-          const response = await fetch(`/bill/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -139,7 +139,7 @@ export default function Bill() {
       if (savedShareId) {
         // Try to load shared bill data
         try {
-          const response = await fetch(`/bill/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -166,7 +166,7 @@ export default function Bill() {
       if (shareId) {
         // Try to load shared bill data
         try {
-          const response = await fetch(`/bill/api/share?id=${shareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${shareId}`);
           if (response.ok) {
             const data = await response.json();
             setPeople(data.people || []);
@@ -369,7 +369,7 @@ export default function Bill() {
 
     try {
       // First verify that the bill exists
-      const response = await fetch(`/bill/api/share?id=${currentBillId}`);
+      const response = await fetch(`/splitbill/api/share?id=${currentBillId}`);
       if (!response.ok) {
         throw new Error('Failed to verify bill');
       }

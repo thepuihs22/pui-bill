@@ -115,7 +115,7 @@ export default function SharedBill() {
   useEffect(() => {
     const loadSharedBill = async () => {
       try {
-        const response = await fetch(`/bill/api/share?id=${params.id}`);
+        const response = await fetch(`/splitbill/api/share?id=${params.id}`);
         if (!response.ok) {
           if (response.status === 404) {
             setError('Shared bill not found');
