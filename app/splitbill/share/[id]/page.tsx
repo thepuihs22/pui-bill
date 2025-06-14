@@ -202,8 +202,8 @@ export default function SharedBill() {
   });
 
   return (
-    <div className="max-w-lg mx-auto p-4 font-mono bg-[#FBFFE9] dark:bg-gray-900 dark:text-white">
-      <h1 className="text-3xl font-bold mb-6 text-center bg-white/80 dark:bg-[#FBFFE9] p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] text-black">
+    <div className="w-full max-w-[1200px] mx-auto p-4 md:p-8 font-mono bg-[#FBFFE9] dark:bg-gray-900 dark:text-white">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center bg-white/80 dark:bg-[#FBFFE9] p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] text-black">
         Bill Summary
       </h1>
 
@@ -230,26 +230,26 @@ export default function SharedBill() {
       <div className="mb-6">
         <h2 className="font-bold text-xl mb-4">Orders</h2>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse text-sm md:text-base">
             <thead>
               <tr className="bg-white/80 dark:bg-[#FBFFE9] text-black">
-                <th className="p-3 text-left border-2 border-black">#</th>
-                <th className="p-3 text-left border-2 border-black">Item</th>
-                <th className="p-3 text-left border-2 border-black">Amount (THB)</th>
-                <th className="p-3 text-left border-2 border-black">Paid by</th>
-                <th className="p-3 text-left border-2 border-black">Split between</th>
-                <th className="p-3 text-left border-2 border-black">Per person THB</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">#</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">Item</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">Amount (THB)</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">Paid by</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">Split between</th>
+                <th className="p-2 md:p-3 text-left border-2 border-black">Per person THB</th>
               </tr>
             </thead>
             <tbody>
               {shareData.orders.map((order: Order, index: number) => (
                 <tr key={index} className="bg-white/80 dark:bg-[#FBFFE9] hover:bg-white/90 dark:hover:bg-[#FBFFE9]/90 text-black">
-                  <td className="p-3 border-2 border-black">{index + 1}</td>
-                  <td className="p-3 border-2 border-black font-bold">{order.name}</td>
-                  <td className="p-3 border-2 border-black">{formatNumber(order.value)}</td>
-                  <td className="p-3 border-2 border-black">{order.payer}</td>
-                  <td className="p-3 border-2 border-black">{order.selectedPeople.join(', ')}</td>
-                  <td className="p-3 border-2 border-black">{formatNumber(order.value / order.selectedPeople.length)}</td>
+                  <td className="p-2 md:p-3 border-2 border-black">{index + 1}</td>
+                  <td className="p-2 md:p-3 border-2 border-black font-bold">{order.name}</td>
+                  <td className="p-2 md:p-3 border-2 border-black">{formatNumber(order.value)}</td>
+                  <td className="p-2 md:p-3 border-2 border-black">{order.payer}</td>
+                  <td className="p-2 md:p-3 border-2 border-black">{order.selectedPeople.join(', ')}</td>
+                  <td className="p-2 md:p-3 border-2 border-black">{formatNumber(order.value / order.selectedPeople.length)}</td>
                 </tr>
               ))}
             </tbody>
@@ -258,7 +258,7 @@ export default function SharedBill() {
       </div>
 
       {/* Summary */}
-      <div className="bg-white/80 dark:bg-[#FBFFE9] p-4 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] text-black">
+      <div className="bg-white/80 dark:bg-[#FBFFE9] p-4 md:p-6 border-4 border-black rounded-md shadow-[8px_8px_0px_0px_black] dark:shadow-[8px_8px_0px_0px_white] text-black">
         <h2 className="font-bold text-xl mb-4">Final Summary</h2>
         <p className="font-bold text-lg border-b-2 border-black pb-2 mb-4">
           Total Bill: {formatNumber(totalAmount)} THB
@@ -331,11 +331,11 @@ export default function SharedBill() {
         Generated on: {new Date(shareData.timestamp).toLocaleString()}
       </div>
 
-      <div className="mt-6 text-center space-y-4">
+      <div className="mt-6 text-center space-y-4 md:space-y-0 md:space-x-4">
         {isOwner && (
           <Link 
             href={`/bill?id=${params.id}`}
-            className="inline-block bg-green-500 text-white px-6 py-2 border-2 border-black rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all mr-4"
+            className="inline-block bg-green-500 text-white px-6 py-2 border-2 border-black rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all"
           >
             Edit Bill
           </Link>
