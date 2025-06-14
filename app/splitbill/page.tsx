@@ -374,7 +374,7 @@ export default function Bill() {
         throw new Error('Failed to verify bill');
       }
 
-      const shareUrl = `${window.location.origin}/bill/share/${currentBillId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${currentBillId}`;
       
       // Navigate to the share page
       window.location.href = shareUrl;
@@ -406,7 +406,7 @@ export default function Bill() {
       });
       
       const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/bill/share/${shareId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${shareId}`;
       
       navigator.clipboard.writeText(shareUrl);
       setShowCopied(true);
