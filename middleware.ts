@@ -6,19 +6,13 @@ export function middleware(request: NextRequest) {
   
   // Handle production environment
   if (hostname === 'splitbill.futureboard.xyz') {
-    // If the path starts with /splitbill, remove it
+    // Don't rewrite if the path already includes /splitbill
     if (pathname.startsWith('/splitbill/')) {
-      const newPathname = pathname.replace('/splitbill', '');
-      return NextResponse.rewrite(new URL(newPathname, request.url));
+      return NextResponse.next();
     }
     
-    // If the path is exactly /splitbill, redirect to root
-    if (pathname === '/splitbill') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    
-    // For paths that don't start with /splitbill, let them through
-    return NextResponse.next();
+    // Rewrite all paths to include /splitbill prefix
+    return NextResponse.rewrite(new URL('/splitbill' + pathname, request.url));
   }
   
   // Handle local development
