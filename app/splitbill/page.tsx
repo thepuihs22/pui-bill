@@ -643,7 +643,7 @@ export default function Bill() {
   return (
     <div className="min-h-screen bg-[#FBFFE9] dark:bg-gray-900 text-gray-800 dark:text-gray">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">KraiJai</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">Split & Bill</h1>
 
         <div className="flex mb-6 gap-4 justify-center">
           <button
