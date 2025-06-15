@@ -397,7 +397,7 @@ export default function Bill() {
     };
 
     try {
-      const response = await fetch('/bill/api/share', {
+      const response = await fetch('/splitbill/api/share', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
