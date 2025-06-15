@@ -334,7 +334,7 @@ export default function SharedBill() {
       <div className="mt-6 text-center space-y-4 md:space-y-0 md:space-x-4">
         {isOwner && (
           <Link 
-            href={`/bill?id=${params.id}`}
+            href={`/splitbill/bill?id=${params.id}`}
             className="inline-block bg-green-500 text-white px-6 py-2 border-2 border-black rounded-md shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] dark:hover:shadow-[2px_2px_0px_0px_white] transition-all"
           >
             Edit Bill
