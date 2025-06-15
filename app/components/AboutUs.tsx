@@ -51,7 +51,7 @@ const AboutUs = () => {
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
         <div className="home-flashback__header">
           <h4 className="home-flashback__title text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center leading-tight">
-           "Our aim: build easy-to-use tools that empower people digitally"
+           "Our aim: build easy-to-use tools that make technology accessible and empower people to succeed"
           </h4>
           <div className="home-flashback__prompt">
             <div className="prompt">
