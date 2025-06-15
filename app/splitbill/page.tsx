@@ -89,7 +89,7 @@ export default function Bill() {
       
       if (savedShareId) {
         try {
-          const response = await fetch(`/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -130,7 +130,7 @@ export default function Bill() {
       
       if (savedShareId) {
         try {
-          const response = await fetch(`/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -155,7 +155,7 @@ export default function Bill() {
 
       if (shareId) {
         try {
-          const response = await fetch(`/api/share?id=${shareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${shareId}`);
           if (response.ok) {
             const data = await response.json();
             setPeople(data.people || []);
@@ -357,12 +357,12 @@ export default function Bill() {
     }
 
     try {
-      const response = await fetch(`/api/share?id=${currentBillId}`);
+      const response = await fetch(`/splitbill/api/share?id=${currentBillId}`);
       if (!response.ok) {
         throw new Error('Failed to verify bill');
       }
 
-      const shareUrl = `${window.location.origin}/share/${currentBillId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${currentBillId}`;
       
       window.location.href = shareUrl;
     } catch (error) {
@@ -384,7 +384,7 @@ export default function Bill() {
     };
 
     try {
-      const response = await fetch('/api/share', {
+      const response = await fetch('/splitbill/api/share', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -393,7 +393,7 @@ export default function Bill() {
       });
       
       const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/share/${shareId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${shareId}`;
       
       navigator.clipboard.writeText(shareUrl);
       setShowCopied(true);

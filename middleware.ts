@@ -2,18 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const hostname = request.nextUrl.hostname;
+  const pathname = request.nextUrl.pathname;
   
+  // Handle production environment
   if (hostname === 'splitbill.futureboard.xyz') {
-    // Don't rewrite API routes
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Don't rewrite if the path already includes /splitbill
+    if (pathname.startsWith('/splitbill/')) {
       return NextResponse.next();
     }
     
-    // Rewrite to /splitbill route for non-API paths
-    return NextResponse.rewrite(new URL('/splitbill' + request.nextUrl.pathname, request.url));
+    // Rewrite all paths to include /splitbill prefix
+    return NextResponse.rewrite(new URL('/splitbill' + pathname, request.url));
   }
   
-  // Default behavior for futureboard.xyz and www.futureboard.xyz
+  // Handle local development
+  // If accessing /api or /share directly, rewrite to include /splitbill
+  if (pathname.startsWith('/api/') || pathname.startsWith('/share/')) {
+    return NextResponse.rewrite(new URL('/splitbill' + pathname, request.url));
+  }
+  
   return NextResponse.next();
 }
 
