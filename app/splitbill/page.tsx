@@ -4,6 +4,12 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 
+// Add utility function for path handling
+const getPath = (path: string) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return isProduction ? path.replace('/splitbill', '') : path;
+};
+
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -92,7 +98,7 @@ export default function Bill() {
       if (savedShareId) {
         // If we have a saved bill ID, load the data
         try {
-          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
+          const response = await fetch(getPath(`/splitbill/api/share?id=${savedShareId}`));
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -139,7 +145,7 @@ export default function Bill() {
       if (savedShareId) {
         // Try to load shared bill data
         try {
-          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
+          const response = await fetch(getPath(`/splitbill/api/share?id=${savedShareId}`));
           if (response.ok) {
             const data = await response.json();
             console.log('data', data);
@@ -166,7 +172,7 @@ export default function Bill() {
       if (shareId) {
         // Try to load shared bill data
         try {
-          const response = await fetch(`/splitbill/api/share?id=${shareId}`);
+          const response = await fetch(getPath(`/splitbill/api/share?id=${shareId}`));
           if (response.ok) {
             const data = await response.json();
             setPeople(data.people || []);
@@ -369,12 +375,12 @@ export default function Bill() {
 
     try {
       // First verify that the bill exists
-      const response = await fetch(`/splitbill/api/share?id=${currentBillId}`);
+      const response = await fetch(getPath(`/splitbill/api/share?id=${currentBillId}`));
       if (!response.ok) {
         throw new Error('Failed to verify bill');
       }
 
-      const shareUrl = `${window.location.origin}/splitbill/share/${currentBillId}`;
+      const shareUrl = `${window.location.origin}${getPath(`/splitbill/share/${currentBillId}`)}`;
       
       // Navigate to the share page
       window.location.href = shareUrl;
@@ -397,7 +403,7 @@ export default function Bill() {
     };
 
     try {
-      const response = await fetch('/splitbill/api/share', {
+      const response = await fetch(getPath('/splitbill/api/share'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -406,7 +412,7 @@ export default function Bill() {
       });
       
       const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/splitbill/share/${shareId}`;
+      const shareUrl = `${window.location.origin}${getPath(`/splitbill/share/${shareId}`)}`;
       
       navigator.clipboard.writeText(shareUrl);
       setShowCopied(true);
