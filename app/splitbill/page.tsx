@@ -82,15 +82,12 @@ export default function Bill() {
   useEffect(() => {
     const initializeFromLocalStorage = async () => {
       setIsClient(true);
-      // Always set isSaveEnabled to true on first load
       setIsSaveEnabled(true);
       
-      // Check for saved bill ID
       const savedShareId = localStorage.getItem('billShareId');
       console.log('savedShareId', savedShareId);
       
       if (savedShareId) {
-        // If we have a saved bill ID, load the data
         try {
           const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
@@ -116,7 +113,6 @@ export default function Bill() {
           }
         } catch (error) {
           console.error('Error loading saved bill:', error);
-          // If there's an error loading the saved bill, clear the localStorage
           localStorage.removeItem('billShareId');
         }
       }
@@ -127,17 +123,12 @@ export default function Bill() {
 
   useEffect(() => {
     const loadBillData = async () => {
-      // Only proceed if we're on the client side
       if (!isClient) return;
-
-      // If we have a current bill ID, don't create a new one
       if (currentBillId) return;
 
-      // Check if save is enabled and get shareId from localStorage
       const savedShareId = localStorage.getItem('billShareId');
       
       if (savedShareId) {
-        // Try to load shared bill data
         try {
           const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
           if (response.ok) {
@@ -159,12 +150,10 @@ export default function Bill() {
         }
       }
 
-      // If no saved data or save is disabled, proceed with normal flow
       const urlParams = new URLSearchParams(window.location.search);
       const shareId = urlParams.get('id');
 
       if (shareId) {
-        // Try to load shared bill data
         try {
           const response = await fetch(`/splitbill/api/share?id=${shareId}`);
           if (response.ok) {
@@ -368,15 +357,13 @@ export default function Bill() {
     }
 
     try {
-      // First verify that the bill exists
       const response = await fetch(`/splitbill/api/share?id=${currentBillId}`);
       if (!response.ok) {
         throw new Error('Failed to verify bill');
       }
 
-      const shareUrl = `${window.location.origin}/bill/share/${currentBillId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${currentBillId}`;
       
-      // Navigate to the share page
       window.location.href = shareUrl;
     } catch (error) {
       console.error('Error sharing bill:', error);
@@ -397,7 +384,7 @@ export default function Bill() {
     };
 
     try {
-      const response = await fetch('/bill/api/share', {
+      const response = await fetch('/splitbill/api/share', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -406,7 +393,7 @@ export default function Bill() {
       });
       
       const { shareId } = await response.json();
-      const shareUrl = `${window.location.origin}/bill/share/${shareId}`;
+      const shareUrl = `${window.location.origin}/splitbill/share/${shareId}`;
       
       navigator.clipboard.writeText(shareUrl);
       setShowCopied(true);

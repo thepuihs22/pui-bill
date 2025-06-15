@@ -29,7 +29,7 @@ const HowWeWork = () => {
     <section id="how-we-work" className="min-h-screen bg-gray-900 text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="como-hacemos-title-holder mb-16">
-          <h3 className="text-4xl md:text-5xl font-bold text-center">At Futureboard, we focus on developing simple, smart digital products that improve everyday life</h3>
+          <h3 className="text-4xl md:text-3xl font-bold text-center">At Futureboard, we focus on developing simple, smart digital products that improve everyday life</h3>
         </div>
 
         {/* Desktop View */}

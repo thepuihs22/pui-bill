@@ -7,15 +7,15 @@ interface TimelineSVGProps {
 }
 
 const TimelineSVG: React.FC<TimelineSVGProps> = ({ steps, selectedStep, onStepClick }) => {
-  const width = 900;
+  const width = typeof window !== 'undefined' ? Math.min(window.innerWidth - 32, 900) : 900;
   const height = 200;
   const stepWidth = (width - (2 * 20)) / (steps - 1);
   const circleRadius = 20;
   const lineY = height / 2;
 
   return (
-    <div className="flex justify-center w-full">
-      <svg width={width} height={height} className="w-full max-w-[900px]">
+    <div className="flex justify-center w-full px-4">
+      <svg width={width} height={height} className="w-full max-w-[900px]" viewBox={`0 0 ${width} ${height}`}>
         {/* Main timeline line */}
         <line
           x1={circleRadius}
