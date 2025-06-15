@@ -97,12 +97,6 @@ function calculatePaymentDetails(people: Person[]): PaymentDetail[] {
   return payments;
 }
 
-// Add utility function for path handling
-const getPath = (path: string) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  return isProduction ? path.replace('/splitbill', '') : path;
-};
-
 export default function SharedBill() {
   const params = useParams();
   const [loading, setLoading] = useState(true);
@@ -121,7 +115,7 @@ export default function SharedBill() {
   useEffect(() => {
     const loadSharedBill = async () => {
       try {
-        const response = await fetch(getPath(`/splitbill/api/share?id=${params.id}`));
+        const response = await fetch(`/api/share?id=${params.id}`);
         if (!response.ok) {
           if (response.status === 404) {
             setError('Shared bill not found');

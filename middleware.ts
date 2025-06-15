@@ -4,7 +4,12 @@ export function middleware(request: NextRequest) {
   const hostname = request.nextUrl.hostname;
   
   if (hostname === 'splitbill.futureboard.xyz') {
-    // Rewrite to /splitbill route
+    // Don't rewrite API routes
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.next();
+    }
+    
+    // Rewrite to /splitbill route for non-API paths
     return NextResponse.rewrite(new URL('/splitbill' + request.nextUrl.pathname, request.url));
   }
   
@@ -13,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
