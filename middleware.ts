@@ -6,8 +6,8 @@ export function middleware(request: NextRequest) {
   
   // Handle production environment
   if (hostname === 'splitbill.futureboard.xyz') {
-    // Don't rewrite if the path already includes /splitbill
-    if (pathname.startsWith('/splitbill/')) {
+    // Don't rewrite if the path already includes /splitbill or is /app
+    if (pathname.startsWith('/splitbill/') || pathname === '/app') {
       return NextResponse.next();
     }
     
