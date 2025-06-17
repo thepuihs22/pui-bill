@@ -64,41 +64,6 @@ const FutureBoard = () => {
     });
   };
 
-  // Function to update text geometry
-  const updateTextGeometry = () => {
-    if (!fontRef.current || !groupRef.current || !materialRef.current) return;
-
-    // Remove existing text mesh and wireframe
-    if (textMeshRef.current) {
-      groupRef.current.remove(textMeshRef.current);
-      textMeshRef.current.geometry.dispose();
-      textMeshRef.current = null;
-    }
-    if (wireframeRef.current) {
-      groupRef.current.remove(wireframeRef.current);
-      wireframeRef.current.geometry.dispose();
-      wireframeRef.current = null;
-    }
-
-    // Create new geometry with responsive size
-    const textGeometry = createTextGeometry(fontRef.current);
-    textGeometry.computeBoundingBox();
-    const textWidth = textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x;
-    textGeometry.translate(-textWidth / 2, 0, 0);
-
-    // Create new text mesh
-    const textMesh = new THREE.Mesh(textGeometry, materialRef.current);
-    groupRef.current.add(textMesh);
-    textMeshRef.current = textMesh;
-
-    // Add black borders to the edges of the text geometry
-    const edges = new THREE.EdgesGeometry(textGeometry);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
-    const wireframe = new THREE.LineSegments(edges, lineMaterial);
-    groupRef.current.add(wireframe);
-    wireframeRef.current = wireframe;
-  };
-
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -299,6 +264,41 @@ const FutureBoard = () => {
     };
 
     window.addEventListener('resize', handleResize);
+
+    // Function to update text geometry (moved inside useEffect)
+    const updateTextGeometry = () => {
+      if (!fontRef.current || !groupRef.current || !materialRef.current) return;
+
+      // Remove existing text mesh and wireframe
+      if (textMeshRef.current) {
+        groupRef.current.remove(textMeshRef.current);
+        textMeshRef.current.geometry.dispose();
+        textMeshRef.current = null;
+      }
+      if (wireframeRef.current) {
+        groupRef.current.remove(wireframeRef.current);
+        wireframeRef.current.geometry.dispose();
+        wireframeRef.current = null;
+      }
+
+      // Create new geometry with responsive size
+      const textGeometry = createTextGeometry(fontRef.current);
+      textGeometry.computeBoundingBox();
+      const textWidth = textGeometry.boundingBox!.max.x - textGeometry.boundingBox!.min.x;
+      textGeometry.translate(-textWidth / 2, 0, 0);
+
+      // Create new text mesh
+      const textMesh = new THREE.Mesh(textGeometry, materialRef.current);
+      groupRef.current.add(textMesh);
+      textMeshRef.current = textMesh;
+
+      // Add black borders to the edges of the text geometry
+      const edges = new THREE.EdgesGeometry(textGeometry);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+      const wireframe = new THREE.LineSegments(edges, lineMaterial);
+      groupRef.current.add(wireframe);
+      wireframeRef.current = wireframe;
+    };
 
     // Cleanup
     return () => {
