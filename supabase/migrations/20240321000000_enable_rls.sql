@@ -22,4 +22,5 @@ CREATE POLICY "Allow updates for any bill" ON public.shared_bills
 -- Allow deletion only if the bill has expired
 CREATE POLICY "Allow deletion of expired bills" ON public.shared_bills
     FOR DELETE
-    USING (expires_at <= NOW()); 
+    USING (expires_at <= NOW());
+

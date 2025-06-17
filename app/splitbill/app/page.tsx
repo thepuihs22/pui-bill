@@ -7,6 +7,7 @@ import { initLiff, isLoggedIn, login, getProfile } from '../../service/liff.serv
 import { useUserStore } from '../../store/user.store';
 import type { UserStore } from '../../store/user.store';
 import { useRouter } from 'next/navigation';
+import { updateOrCreateUser } from '@/app/service/user.service';
 
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
@@ -667,6 +668,7 @@ export default function App() {
             pictureUrl: profile.pictureUrl,
             statusMessage: profile.statusMessage,
           });
+          updateOrCreateUser(profile);
         }
         setLiffReady(true);
       } catch (err) {
