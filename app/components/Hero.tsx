@@ -19,7 +19,7 @@ const Hero = () => {
       </div>
       <div className="absolute top-4 sm:top-8 right-4 sm:right-8 z-20 flex flex-col sm:flex-row gap-3">
         <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#111827] text-[#E6FF74] rounded-lg hover:bg-[#1F2937] transition-colors text-sm sm:text-base">
-          <a href="https://splitbill.futureboard.xyz/" target="_blank" rel="noopener noreferrer"><span>Split & Bill</span></a>
+          <a href="https://splitbill.futureboard.xyz/" target="_blank" rel="noopener noreferrer"><span>KraiJai</span></a>
           <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
         <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#111827] text-[#E6FF74] rounded-lg hover:bg-[#1F2937] transition-colors text-sm sm:text-base">

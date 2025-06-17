@@ -4,6 +4,10 @@ import { supabase } from '@/lib/supabaseClient';
 export async function POST(request: Request) {
   try {
     const userData = await request.json();
+
+    console.log('starting user create api');
+    console.log('userData', userData);
+
     
     // First, check if user already exists
     const { data: existingUser, error: checkError } = await supabase

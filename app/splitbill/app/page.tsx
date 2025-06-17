@@ -8,6 +8,7 @@ import { useUserStore } from '../../store/user.store';
 import type { UserStore } from '../../store/user.store';
 import { useRouter } from 'next/navigation';
 import { updateOrCreateUser } from '@/app/service/user.service';
+import { useBillStore } from '@/app/store/bill.store';
 
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
@@ -88,21 +89,19 @@ export default function App() {
   const setUser = useUserStore((state: UserStore) => state.setUser);
   const user = useUserStore((state: UserStore) => state.user);
 
+  const { billId, setBillId, clearBillId } = useBillStore();
+
   // Add useEffect for client-side initialization
   useEffect(() => {
-    const initializeFromLocalStorage = async () => {
+    const initializeFromStore = async () => {
       setIsClient(true);
       setIsSaveEnabled(true);
       
-      const savedShareId = localStorage.getItem('billShareId');
-      console.log('savedShareId', savedShareId);
-      
-      if (savedShareId) {
+      if (billId) {
         try {
-          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${billId}`);
           if (response.ok) {
             const data = await response.json();
-            console.log('data', data);
             if (data && data.people && data.orders) {
               setPeople(data.people || []);
               setOrders(data.orders || []);
@@ -112,38 +111,33 @@ export default function App() {
                 fullName: '',
                 bankName: '',
               });
-              setCurrentBillId(savedShareId);
+              setCurrentBillId(billId);
             } else {
-              // If data is invalid, clear localStorage
-              localStorage.removeItem('billShareId');
+              clearBillId();
             }
           } else {
-            // If response is not ok, clear localStorage
-            localStorage.removeItem('billShareId');
+            clearBillId();
           }
         } catch (error) {
           console.error('Error loading saved bill:', error);
-          localStorage.removeItem('billShareId');
+          clearBillId();
         }
       }
     };
 
-    initializeFromLocalStorage();
-  }, []);
+    initializeFromStore();
+  }, [billId]);
 
   useEffect(() => {
     const loadBillData = async () => {
       if (!isClient) return;
       if (currentBillId) return;
 
-      const savedShareId = localStorage.getItem('billShareId');
-      
-      if (savedShareId) {
+      if (billId) {
         try {
-          const response = await fetch(`/splitbill/api/share?id=${savedShareId}`);
+          const response = await fetch(`/splitbill/api/share?id=${billId}`);
           if (response.ok) {
             const data = await response.json();
-            console.log('data', data);
             setPeople(data.people || []);
             setOrders(data.orders || []);
             setPaymentInfo(data.payment_info || {
@@ -152,7 +146,7 @@ export default function App() {
               fullName: '',
               bankName: '',
             });
-            setCurrentBillId(savedShareId);
+            setCurrentBillId(billId);
             return;
           }
         } catch (error) {
@@ -239,7 +233,7 @@ export default function App() {
     };
 
     loadBillData();
-  }, [isClient, currentBillId]);
+  }, [isClient, currentBillId, billId]);
 
   // Replace the save effect with an update function
   useEffect(() => {
@@ -379,6 +373,8 @@ export default function App() {
       console.error('Error sharing bill:', error);
       toast.error('Failed to generate share link. Please try saving the bill again.');
     }
+
+    setBillId(currentBillId);
   };
 
   // Update handleCopyLink similarly
@@ -508,7 +504,7 @@ export default function App() {
       // If enabling save, proceed directly
       setIsSaveEnabled(true);
       if (currentBillId) {
-        localStorage.setItem('billShareId', currentBillId);
+        setBillId(currentBillId);
         handleSave();
       }
     } else {
@@ -519,8 +515,8 @@ export default function App() {
 
   // Add handler for confirming save disable
   const handleConfirmSaveDisable = () => {
+    clearBillId();
     setIsSaveEnabled(false);
-    localStorage.removeItem('billShareId');
     setShowSaveConfirmModal(false);
   };
 
@@ -532,7 +528,7 @@ export default function App() {
   // Add effect to save billShareId to localStorage when currentBillId changes
   useEffect(() => {
     if (isClient && isSaveEnabled && currentBillId) {
-      localStorage.setItem('billShareId', currentBillId);
+      setBillId(currentBillId);
     }
   }, [currentBillId, isSaveEnabled, isClient]);
 
@@ -558,7 +554,7 @@ export default function App() {
         toast.error('Failed to save changes');
         // If save fails, disable auto-save
         setIsSaveEnabled(false);
-        localStorage.removeItem('billShareId');
+        clearBillId();
       } else {
         toast.success('Changes saved successfully');
       }
@@ -567,10 +563,12 @@ export default function App() {
       toast.error('Failed to save changes');
       // If save fails, disable auto-save
       setIsSaveEnabled(false);
-      localStorage.removeItem('billShareId');
+      clearBillId();
     } finally {
       setIsSaving(false);
     }
+
+    setBillId(currentBillId);
   };
 
   // Add handleEditPerson function
@@ -668,6 +666,7 @@ export default function App() {
             pictureUrl: profile.pictureUrl,
             statusMessage: profile.statusMessage,
           });
+          console.log('profile', profile);
           updateOrCreateUser(profile);
         }
         setLiffReady(true);
@@ -688,7 +687,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FBFFE9] dark:bg-gray-900 text-gray-800 dark:text-gray">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">Split & Bill</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center dark:text-[#FBFFE9]">KraiJai</h1>
 
         <div className="flex mb-6 gap-4 justify-center">
           <button
@@ -1030,7 +1029,7 @@ export default function App() {
         </div>
 
         <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t-2 border-black dark:border-white pt-4">
-          <p>© {new Date().getFullYear()} Eat & Split. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} KraiJai. All rights reserved.</p>
           <p className="mt-1">Made with 💖 by <a href="/"  target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Futureboard</a></p>
         </footer>
       </div>
