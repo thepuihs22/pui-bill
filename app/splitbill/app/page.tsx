@@ -9,6 +9,7 @@ import type { UserStore } from '../../store/user.store';
 import { useRouter } from 'next/navigation';
 import { updateOrCreateUser } from '@/app/service/user.service';
 import { useBillStore } from '@/app/store/bill.store';
+import { loadBillId } from '@/app/service/bill.service';
 
 // Add this helper function at the top of the file after imports
 const formatNumber = (num: number) => {
@@ -113,20 +114,20 @@ export default function App() {
               });
               setCurrentBillId(billId);
             } else {
-              clearBillId();
+              if (user?.userId) clearBillId(user.userId);
             }
           } else {
-            clearBillId();
+            if (user?.userId) clearBillId(user.userId);
           }
         } catch (error) {
           console.error('Error loading saved bill:', error);
-          clearBillId();
+          if (user?.userId) clearBillId(user.userId);
         }
       }
     };
 
     initializeFromStore();
-  }, [billId]);
+  }, [billId, user?.userId]);
 
   useEffect(() => {
     const loadBillData = async () => {
@@ -374,7 +375,7 @@ export default function App() {
       toast.error('Failed to generate share link. Please try saving the bill again.');
     }
 
-    setBillId(currentBillId);
+    if (user?.userId) setBillId(user.userId, currentBillId);
   };
 
   // Update handleCopyLink similarly
@@ -504,7 +505,7 @@ export default function App() {
       // If enabling save, proceed directly
       setIsSaveEnabled(true);
       if (currentBillId) {
-        setBillId(currentBillId);
+        if (user?.userId) setBillId(user.userId, currentBillId);
         handleSave();
       }
     } else {
@@ -515,7 +516,7 @@ export default function App() {
 
   // Add handler for confirming save disable
   const handleConfirmSaveDisable = () => {
-    clearBillId();
+    if (user?.userId) clearBillId(user.userId);
     setIsSaveEnabled(false);
     setShowSaveConfirmModal(false);
   };
@@ -528,9 +529,9 @@ export default function App() {
   // Add effect to save billShareId to localStorage when currentBillId changes
   useEffect(() => {
     if (isClient && isSaveEnabled && currentBillId) {
-      setBillId(currentBillId);
+      if (user?.userId) setBillId(user.userId, currentBillId);
     }
-  }, [currentBillId, isSaveEnabled, isClient]);
+  }, [currentBillId, isSaveEnabled, isClient, user?.userId, setBillId]);
 
   // Modify handleSave to return a promise
   const handleSave = async () => {
@@ -554,7 +555,7 @@ export default function App() {
         toast.error('Failed to save changes');
         // If save fails, disable auto-save
         setIsSaveEnabled(false);
-        clearBillId();
+        if (user?.userId) clearBillId(user.userId);
       } else {
         toast.success('Changes saved successfully');
       }
@@ -563,12 +564,12 @@ export default function App() {
       toast.error('Failed to save changes');
       // If save fails, disable auto-save
       setIsSaveEnabled(false);
-      clearBillId();
+      if (user?.userId) clearBillId(user.userId);
     } finally {
       setIsSaving(false);
     }
 
-    setBillId(currentBillId);
+    if (user?.userId) setBillId(user.userId, currentBillId);
   };
 
   // Add handleEditPerson function
@@ -668,6 +669,10 @@ export default function App() {
           });
           console.log('profile', profile);
           updateOrCreateUser(profile);
+          const loadedBillId = await loadBillId(profile.userId);
+          if (loadedBillId) {
+            if (user?.userId) setBillId(user.userId, loadedBillId);
+          }
         }
         setLiffReady(true);
       } catch (err) {
