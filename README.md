@@ -40,5 +40,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 1. install ngrok and register for free
 2. run command ngrok http http://localhost:3000
 3. GOTO kraiJai LIFF select LiFF app name = Local edit Endpoint URL to be same as ngrok URL example: https://e002-2405-9800-bc90-b832-680a-e128-bfc5-3b72.ngrok-free.app/splitbill/app
-4. Edit LIFF ID as 2007575769-W7469a3Z
+4. Edit LIFF ID as 2007575769-W7469a3Z in env local
 5. pnpm run dev
+6. enter url: https://liff.line.me/2007575769-W7469a3Z 
