@@ -289,6 +289,11 @@ export default function App() {
     }]);
     setNewName('');
     setNewPromptpay('');
+
+    // Set billId when first data is added
+    if (currentBillId && user?.userId && isSaveEnabled) {
+      setBillId(user.userId, currentBillId);
+    }
   };
 
   const handleRemovePerson = (index: number) => {
@@ -669,9 +674,35 @@ export default function App() {
           });
           console.log('profile', profile);
           updateOrCreateUser(profile);
+          
+          // Load existing bill session
           const loadedBillId = await loadBillId(profile.userId);
           if (loadedBillId) {
-            if (user?.userId) setBillId(user.userId, loadedBillId);
+            console.log('Found existing bill session:', loadedBillId);
+            setBillId(profile.userId, loadedBillId);
+            setCurrentBillId(loadedBillId);
+            setIsSaveEnabled(true);
+            
+            // Load the bill data
+            try {
+              const response = await fetch(`/splitbill/api/share?id=${loadedBillId}`);
+              if (response.ok) {
+                const data = await response.json();
+                if (data && data.people && data.orders) {
+                  setPeople(data.people || []);
+                  setOrders(data.orders || []);
+                  setPaymentInfo(data.payment_info || {
+                    accountName: '',
+                    promptpay: '',
+                    fullName: '',
+                    bankName: '',
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error loading bill data:', error);
+              toast.error('Failed to load saved bill data');
+            }
           }
         }
         setLiffReady(true);
