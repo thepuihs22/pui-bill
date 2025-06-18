@@ -92,151 +92,105 @@ export default function App() {
 
   const { billId, setBillId, clearBillId } = useBillStore();
 
-  // Add useEffect for client-side initialization
+  // Add new state for initialization
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Consolidate initialization logic into a single useEffect
   useEffect(() => {
-    const initializeFromStore = async () => {
-      setIsClient(true);
-      setIsSaveEnabled(true);
-      
-      if (billId) {
-        try {
-          const response = await fetch(`/splitbill/api/share?id=${billId}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.people && data.orders) {
-              setPeople(data.people || []);
-              setOrders(data.orders || []);
-              setPaymentInfo(data.payment_info || {
-                accountName: '',
-                promptpay: '',
-                fullName: '',
-                bankName: '',
-              });
-              setCurrentBillId(billId);
-            } else {
-              if (user?.userId) clearBillId(user.userId);
+    if (typeof window === 'undefined' || isInitialized) return;
+    
+    const init = async () => {
+      try {
+        await initLiff();
+        if (!isLoggedIn()) {
+          console.log('login');
+          login();
+          return;
+        }
+        const profile = await getProfile();
+        if (profile) {
+          setUser({
+            userId: profile.userId,
+            displayName: profile.displayName,
+            pictureUrl: profile.pictureUrl,
+            statusMessage: profile.statusMessage,
+          });
+          console.log('profile', profile);
+          await updateOrCreateUser(profile);
+          
+          // Load existing bill session
+          const loadedBillId = await loadBillId(profile.userId);
+          if (loadedBillId) {
+            console.log('Found existing bill session:', loadedBillId);
+            await setBillId(profile.userId, loadedBillId);
+            setCurrentBillId(loadedBillId);
+            setIsSaveEnabled(true);
+            
+            // Load the bill data
+            try {
+              const response = await fetch(`/splitbill/api/share?id=${loadedBillId}`);
+              if (response.ok) {
+                const data = await response.json();
+                if (data && data.people && data.orders) {
+                  setPeople(data.people || []);
+                  setOrders(data.orders || []);
+                  setPaymentInfo(data.payment_info || {
+                    accountName: '',
+                    promptpay: '',
+                    fullName: '',
+                    bankName: '',
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error loading bill data:', error);
+              toast.error('Failed to load saved bill data');
             }
           } else {
-            if (user?.userId) clearBillId(user.userId);
+            console.log('No bill ID found, creating new bill...');
+            // Create a new bill in shared_bills
+            const { data: newBill, error: createError } = await supabase
+              .from('shared_bills')
+              .insert({
+                people: [],
+                orders: [],
+                payment_info: {
+                  accountName: '',
+                  promptpay: '',
+                  fullName: '',
+                  bankName: '',
+                },
+                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error('Error creating new bill:', createError);
+              toast.error('Failed to create new bill');
+              return;
+            }
+
+            // Create bill session
+            if (newBill) {
+              console.log('Created new bill:', newBill.id);
+              setCurrentBillId(newBill.id);
+              setIsSaveEnabled(true);
+              await setBillId(profile.userId, newBill.id);
+            }
           }
-        } catch (error) {
-          console.error('Error loading saved bill:', error);
-          if (user?.userId) clearBillId(user.userId);
         }
+        setLiffReady(true);
+        setIsInitialized(true);
+      } catch (err) {
+        console.error('LIFF init error:', err);
       }
     };
+    init();
+  }, [isInitialized, setUser]);
 
-    initializeFromStore();
-  }, [billId, user?.userId]);
-
-  useEffect(() => {
-    const loadBillData = async () => {
-      if (!isClient) return;
-      if (currentBillId) return;
-
-      if (billId) {
-        try {
-          const response = await fetch(`/splitbill/api/share?id=${billId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setPeople(data.people || []);
-            setOrders(data.orders || []);
-            setPaymentInfo(data.payment_info || {
-              accountName: '',
-              promptpay: '',
-              fullName: '',
-              bankName: '',
-            });
-            setCurrentBillId(billId);
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading shared bill:', error);
-        }
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const shareId = urlParams.get('id');
-
-      if (shareId) {
-        try {
-          const response = await fetch(`/splitbill/api/share?id=${shareId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setPeople(data.people || []);
-            setOrders(data.orders || []);
-            setPaymentInfo(data.payment_info || {
-              accountName: '',
-              promptpay: '',
-              fullName: '',
-              bankName: '',
-            });
-            setCurrentBillId(shareId);
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading shared bill:', error);
-        }
-      }
-
-      // Check for existing empty bill only if we don't have a current bill ID
-      if (!currentBillId) {
-        const { data: existingBills, error: fetchError } = await supabase
-          .from('shared_bills')
-          .select('*')
-          .eq('people', '[]')
-          .eq('orders', '[]')
-          .eq('payment_info', '{}')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (!fetchError && existingBills) {
-          console.log('Found existing empty bill:', existingBills.id);
-          setCurrentBillId(existingBills.id);
-          setPeople([]);
-          setOrders([]);
-          setPaymentInfo({
-            accountName: '',
-            promptpay: '',
-            fullName: '',
-            bankName: '',
-          });
-          return;
-        }
-
-        // If no empty bill exists, create a new one
-        console.log('Creating new bill...');
-        const { data, error } = await supabase
-          .from('shared_bills')
-          .insert({
-            people: [],
-            orders: [],
-            payment_info: {
-              accountName: '',
-              promptpay: '',
-              fullName: '',
-              bankName: '',
-            },
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating new bill:', error);
-          return;
-        }
-
-        setCurrentBillId(data.id);
-      }
-    };
-
-    loadBillData();
-  }, [isClient, currentBillId, billId]);
-
-  // Replace the save effect with an update function
+  // Keep the update effect for saving changes
   useEffect(() => {
     const updateBillData = async () => {
       if (!currentBillId || (people.length === 0 && orders.length === 0)) return;
@@ -247,7 +201,7 @@ export default function App() {
           people,
           orders,
           payment_info: payment_info,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', currentBillId);
@@ -653,66 +607,6 @@ export default function App() {
     
     return payments;
   };
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const init = async () => {
-      try {
-        await initLiff();
-        if (!isLoggedIn()) {
-          router.push('/splitbill');
-          return;
-        }
-        const profile = await getProfile();
-        if (profile) {
-          setUser({
-            userId: profile.userId,
-            displayName: profile.displayName,
-            pictureUrl: profile.pictureUrl,
-            statusMessage: profile.statusMessage,
-          });
-          console.log('profile', profile);
-          updateOrCreateUser(profile);
-          
-          // Load existing bill session
-          const loadedBillId = await loadBillId(profile.userId);
-          if (loadedBillId) {
-            console.log('Found existing bill session:', loadedBillId);
-            setBillId(profile.userId, loadedBillId);
-            setCurrentBillId(loadedBillId);
-            setIsSaveEnabled(true);
-            
-            // Load the bill data
-            try {
-              const response = await fetch(`/splitbill/api/share?id=${loadedBillId}`);
-              if (response.ok) {
-                const data = await response.json();
-                if (data && data.people && data.orders) {
-                  setPeople(data.people || []);
-                  setOrders(data.orders || []);
-                  setPaymentInfo(data.payment_info || {
-                    accountName: '',
-                    promptpay: '',
-                    fullName: '',
-                    bankName: '',
-                  });
-                }
-              }
-            } catch (error) {
-              console.error('Error loading bill data:', error);
-              toast.error('Failed to load saved bill data');
-            }
-          }
-        }
-        setLiffReady(true);
-      } catch (err) {
-        console.error('LIFF init error:', err);
-      }
-    };
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setUser]);
 
   if (!liffReady || !user) {
     return (
