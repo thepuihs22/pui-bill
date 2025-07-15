@@ -40,14 +40,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <header className="bg-white shadow-lg sticky top-0 z-50">
+      <header className="bg-white dark:bg-card shadow-lg sticky top-0 z-50 border-b border-gray-200 dark:border-border">
         <div className="container mx-auto px-4 py-4 md:py-6">
-          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-center text-gray-800 mb-1 md:mb-2 leading-tight">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-center text-gray-800 dark:text-card-foreground mb-1 md:mb-2 leading-tight">
             ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น
           </h1>
-          <p className="text-sm md:text-lg text-center text-gray-600">
+          <p className="text-sm md:text-lg text-center text-gray-600 dark:text-muted-foreground">
             For Sale U Delight @ Onnut Station
           </p>
         </div>
@@ -66,8 +66,8 @@ export default function Home() {
           {/* Left Column - Images */}
           <div className="space-y-4 md:space-y-6 order-2 lg:order-1">
             {/* Image Gallery */}
-            <div className="bg-white rounded-lg shadow-lg p-3 md:p-4">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800">ภาพห้อง</h2>
+            <div className="bg-white dark:bg-card rounded-lg shadow-lg p-3 md:p-4 border border-gray-200 dark:border-border">
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">ภาพห้อง</h2>
               
               {/* Category Filter */}
               <div className="flex flex-wrap gap-1 md:gap-2 mb-3 md:mb-4">
@@ -78,7 +78,7 @@ export default function Home() {
                     className={`px-2 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium transition-colors min-w-fit ${
                       activeCategory === category
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-gray-200 dark:bg-muted text-gray-700 dark:text-muted-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
                     {category === 'all' ? 'ทั้งหมด' : 
@@ -91,13 +91,13 @@ export default function Home() {
               </div>
 
               {/* Main Image */}
-              <div className="relative h-48 sm:h-64 md:h-80 mb-3 md:mb-4 rounded-lg overflow-hidden">
+              <div className="relative h-48 sm:h-64 md:h-80 mb-3 md:mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-muted">
                 {filteredImages.length > 0 && (
                   <Image
                     src={`/images/${filteredImages[activeImage].src}`}
                     alt="Condo image"
                     fill
-                    className="object-contain bg-gray-100"
+                    className="object-contain"
                   />
                 )}
               </div>
@@ -108,7 +108,7 @@ export default function Home() {
                   <button
                     key={index}
                     onClick={() => setActiveImage(index)}
-                    className={`relative h-12 sm:h-16 rounded overflow-hidden ${
+                    className={`relative h-12 sm:h-16 rounded overflow-hidden bg-gray-100 dark:bg-muted ${
                       activeImage === index ? 'ring-2 ring-blue-500' : ''
                     }`}
                   >
@@ -116,7 +116,7 @@ export default function Home() {
                       src={`/images/${img.src}`}
                       alt="Thumbnail"
                       fill
-                      className="object-contain bg-gray-100"
+                      className="object-contain"
                     />
                   </button>
                 ))}
@@ -127,114 +127,114 @@ export default function Home() {
           {/* Right Column - Details */}
           <div className="space-y-4 md:space-y-6 order-1 lg:order-2">
             {/* Basic Info */}
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800">ข้อมูลห้อง</h2>
+            <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">ข้อมูลห้อง</h2>
               <div className="space-y-2 md:space-y-3">
                 <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 text-sm md:text-base">ขนาด:</span>
-                  <span className="font-semibold text-sm md:text-base">30 ตรม.</span>
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ขนาด:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">30 ตรม.</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 text-sm md:text-base">ห้องนอน:</span>
-                  <span className="font-semibold text-sm md:text-base">1 ห้อง</span>
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ห้องนอน:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">1 ห้อง</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 text-sm md:text-base">ห้องน้ำ:</span>
-                  <span className="font-semibold text-sm md:text-base">1 ห้อง</span>
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ห้องน้ำ:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">1 ห้อง</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 text-sm md:text-base">ชั้น:</span>
-                  <span className="font-semibold text-sm md:text-base">ชั้น 20</span>
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ชั้น:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">ชั้น 20</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 text-sm md:text-base">วิว:</span>
-                  <span className="font-semibold text-sm md:text-base">สระว่ายน้ำ</span>
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">วิว:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">สระว่ายน้ำ</span>
                 </div>
               </div>
             </div>
 
             {/* Features */}
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800">เครื่องใช้ไฟฟ้า</h2>
+            <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">เครื่องใช้ไฟฟ้า</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-2 text-xs md:text-sm">
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">เครื่องปรับอากาศ 2 ตัว</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องปรับอากาศ 2 ตัว</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ตู้เย็น</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ตู้เย็น</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">เตาทำอาหาร</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">เตาทำอาหาร</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">เครื่องดูดควัน</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องดูดควัน</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">เครื่องทำน้ำอุ่น</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องทำน้ำอุ่น</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">เครื่องกรองน้ำ</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องกรองน้ำ</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">Digital door lock</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">Digital door lock</span>
                 </div>
               </div>
             </div>
 
             {/* Facilities */}
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800">สิ่งอำนวยความสะดวก</h2>
+            <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">สิ่งอำนวยความสะดวก</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-2 text-xs md:text-sm">
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">สระว่ายน้ำ</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">สระว่ายน้ำ</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ฟิตเนส</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ฟิตเนส</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ซาวน่า</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ซาวน่า</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ห้องสมุด</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ห้องสมุด</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">รักษาความปลอดภัย 24 ชม.</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">รักษาความปลอดภัย 24 ชม.</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">7-11 ภายในโครงการ</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">7-11 ภายในโครงการ</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ร้านอาหาร</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ร้านอาหาร</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ร้านเสริมสวย</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ร้านเสริมสวย</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ที่จอดรถ</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ที่จอดรถ</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">BTS อ่อนนุช 800 ม.</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">BTS อ่อนนุช 800 ม.</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate">ใกล้บิ๊กซี 200 ม.</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">ใกล้บิ๊กซี 200 ม.</span>
                 </div>
               </div>
             </div>
@@ -242,13 +242,13 @@ export default function Home() {
         </div>
 
         {/* Contact Section */}
-        <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-800">ติดต่อเจ้าของ</h2>
+        <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-8 mb-6 md:mb-8 border border-gray-200 dark:border-border">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-800 dark:text-card-foreground">ติดต่อเจ้าของ</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-center">
             {/* QR Code */}
             <div className="text-center order-1 md:order-1">
-              <div className="bg-gray-100 rounded-lg p-3 md:p-4 inline-block">
+              <div className="bg-gray-100 dark:bg-muted rounded-lg p-3 md:p-4 inline-block">
                 <Image
                   src="/images/qr.jpg"
                   alt="QR Code"
@@ -257,20 +257,20 @@ export default function Home() {
                   className="rounded w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36"
                 />
               </div>
-              <p className="mt-2 text-xs md:text-sm text-gray-600">สแกน QR Code เพื่อติดต่อ</p>
+              <p className="mt-2 text-xs md:text-sm text-gray-600 dark:text-muted-foreground">สแกน QR Code เพื่อติดต่อ</p>
             </div>
 
             {/* Contact Info */}
             <div className="text-center space-y-3 md:space-y-4 order-2 md:order-2">
               <div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-1 md:mb-2">ปุย</h3>
-                <p className="text-xs md:text-sm text-gray-600">เจ้าของผู้หญิงอยู่เอง</p>
-                <p className="text-xs md:text-sm text-gray-600">ไม่เคยปล่อยเช่า</p>
+                <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-card-foreground mb-1 md:mb-2">ปุย</h3>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">เจ้าของผู้หญิงอยู่เอง</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">ไม่เคยปล่อยเช่า</p>
               </div>
               
               <div className="space-y-1 md:space-y-2">
-                <p className="text-xs md:text-sm text-gray-600">Line ID:</p>
-                <p className="font-semibold text-blue-600 text-sm md:text-base">thepuihs22</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">Line ID:</p>
+                <p className="font-semibold text-blue-600 dark:text-blue-400 text-sm md:text-base">thepuihs22</p>
               </div>
             </div>
 
@@ -300,9 +300,9 @@ export default function Home() {
         </div>
 
         {/* Additional Info */}
-        <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
-          <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800">ข้อมูลเพิ่มเติม</h2>
-          <div className="space-y-2 md:space-y-3 text-sm md:text-base text-gray-700">
+        <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
+          <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">ข้อมูลเพิ่มเติม</h2>
+          <div className="space-y-2 md:space-y-3 text-sm md:text-base text-gray-700 dark:text-muted-foreground">
             <p>• Built-In ทั้งห้องพร้อมเข้าอยู่</p>
             <p>• ห้องครัวปิด</p>
             <p>• ห้องสภาพสวยพร้อมอยู่</p>
@@ -314,7 +314,7 @@ export default function Home() {
         <div className="text-center mt-6 md:mt-8">
           <div className="flex flex-wrap justify-center gap-1 md:gap-2">
             {['#ดีไลท์แอทอ่อนนุชสเตชั่น', '#UDelightOnnutStation', '#คอนโดอ่อนนุช', '#คอนโดยูดีไลท์อ่อนนุช', '#คอนโดใกล้BTSอ่ออนุช'].map((tag, index) => (
-              <span key={index} className="bg-blue-100 text-blue-800 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">
+              <span key={index} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">
                 {tag}
               </span>
             ))}
