@@ -3,24 +3,20 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
-export default function Home() {
+export default function Moolin() {
   const [activeImage, setActiveImage] = useState(0);
   const [activeCategory, setActiveCategory] = useState('all');
 
   const images = {
-    bathroom: ['bahtroom-1.jpg', 'bahtroom-2.jpg'],
-    bedroom: ['bedroom-1.jpg', 'bedroom-2.jpg', 'bedroom-3.jpg'],
-    kitchen: ['kitchen-1.jpg', 'kitchen-2.jpg', 'kitchen-3.jpg'],
+    bedroom: ['bedroom-1.jpg', 'bedroom-2.jpg'],
     living: ['living-1.jpg', 'living-2.jpg', 'living-3.jpg', 'living-4.jpg'],
-    outdoor: ['outdoor-1.jpg', 'outdoor-2.jpg']
+    common: ['common-area-1.jpg', 'common-area-2.jpg', 'common-area-3.jpg', 'common-area-4.jpg']
   };
 
   const allImages = [
-    ...images.bathroom.map(img => ({ src: img, category: 'bathroom' })),
     ...images.bedroom.map(img => ({ src: img, category: 'bedroom' })),
-    ...images.kitchen.map(img => ({ src: img, category: 'kitchen' })),
     ...images.living.map(img => ({ src: img, category: 'living' })),
-    ...images.outdoor.map(img => ({ src: img, category: 'outdoor' }))
+    ...images.common.map(img => ({ src: img, category: 'common' }))
   ];
 
   const filteredImages = activeCategory === 'all' 
@@ -35,11 +31,11 @@ export default function Home() {
   }, [activeCategory]);
 
   const handleCall = () => {
-    window.location.href = 'tel:0911421142';
+    window.location.href = 'tel:0936636159';
   };
 
   const handleLine = () => {
-    window.open('https://line.me/ti/p/5nriK5Hvka', '_blank');
+    window.open('https://line.me/ti/p/8j-kAlhrT7', '_blank');
   };
 
   return (
@@ -48,10 +44,10 @@ export default function Home() {
       <header className="bg-white dark:bg-card shadow-lg sticky top-0 z-50 border-b border-gray-200 dark:border-border">
         <div className="container mx-auto px-4 py-4 md:py-6">
           <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-center text-gray-800 dark:text-card-foreground mb-1 md:mb-2 leading-tight">
-            ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น
+            ขายผ่อนดาวน์ Aspire Sukumvit – Rama4
           </h1>
           <p className="text-sm md:text-lg text-center text-gray-600 dark:text-muted-foreground">
-            For Sale U Delight @ Onnut Station
+            For Sale Installment Aspire Sukumvit – Rama4
           </p>
         </div>
       </header>
@@ -60,7 +56,7 @@ export default function Home() {
         {/* Price Badge */}
         <div className="text-center mb-6 md:mb-8">
           <div className="inline-block bg-red-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-full text-lg md:text-2xl font-bold shadow-lg">
-            ราคา 2.49 ล้านบาท
+            ราคา 3.58 ล้านบาท
           </div>
         </div>
 
@@ -74,7 +70,7 @@ export default function Home() {
               
               {/* Category Filter */}
               <div className="flex flex-wrap gap-1 md:gap-2 mb-3 md:mb-4">
-                {['all', 'bedroom', 'bathroom', 'kitchen', 'living', 'outdoor'].map((category) => (
+                {['all', 'bedroom', 'living', 'common'].map((category) => (
                   <button
                     key={category}
                     onClick={() => setActiveCategory(category)}
@@ -86,9 +82,7 @@ export default function Home() {
                   >
                     {category === 'all' ? 'ทั้งหมด' : 
                      category === 'bedroom' ? 'ห้องนอน' :
-                     category === 'bathroom' ? 'ห้องน้ำ' :
-                     category === 'kitchen' ? 'ห้องครัว' :
-                     category === 'living' ? 'ห้องนั่งเล่น' : 'ภายนอก'}
+                     category === 'living' ? 'ห้องนั่งเล่น' : 'ส่วนกลาง'}
                   </button>
                 ))}
               </div>
@@ -97,7 +91,7 @@ export default function Home() {
               <div className="relative h-48 sm:h-64 md:h-80 mb-3 md:mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-muted">
                 {filteredImages.length > 0 && (
                   <Image
-                    src={`/images/${filteredImages[validActiveImage].src}`}
+                    src={`/images/moolin/${filteredImages[validActiveImage].src}`}
                     alt="Condo image"
                     fill
                     className="object-contain"
@@ -116,7 +110,7 @@ export default function Home() {
                     }`}
                   >
                     <Image
-                      src={`/images/${img.src}`}
+                      src={`/images/moolin/${img.src}`}
                       alt="Thumbnail"
                       fill
                       className="object-contain"
@@ -134,31 +128,31 @@ export default function Home() {
               <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">ข้อมูลห้อง</h2>
               <div className="space-y-2 md:space-y-3">
                 <div className="flex items-center">
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">Unit:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">A33G3M40</span>
+                </div>
+                <div className="flex items-center">
                   <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ขนาด:</span>
-                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">30 ตรม.</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ห้องนอน:</span>
-                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">1 ห้อง</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ห้องน้ำ:</span>
-                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">1 ห้อง</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">25 ตรม. (รวม 41 ตรม.)</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ชั้น:</span>
-                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">ชั้น 20</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">ชั้น 33</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">วิว:</span>
-                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">สระว่ายน้ำ</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">วิวเมือง</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-16 md:w-24 text-gray-600 dark:text-muted-foreground text-sm md:text-base">ตำแหน่ง:</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-800 dark:text-card-foreground">ห้องริมสุด private</span>
                 </div>
               </div>
             </div>
 
             {/* Features */}
             <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">เครื่องใช้ไฟฟ้า</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">สิ่งที่ได้มา</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-2 text-xs md:text-sm">
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
@@ -166,79 +160,78 @@ export default function Home() {
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ตู้เย็น</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">Build-in Kitchen</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">เตาทำอาหาร</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">Build-in bathroom</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องดูดควัน</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">บันได</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องทำน้ำอุ่น</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">พื้นลามิเนต</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">เครื่องกรองน้ำ</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">Digital door lock</span>
+                  <span className="truncate text-gray-800 dark:text-card-foreground">หัวนอนปรับทิศทางได้</span>
                 </div>
               </div>
             </div>
 
-            {/* Facilities */}
+            {/* Project Details */}
             <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
-              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">สิ่งอำนวยความสะดวก</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-2 text-xs md:text-sm">
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">สระว่ายน้ำ</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ฟิตเนส</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ซาวน่า</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ห้องสมุด</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">รักษาความปลอดภัย 24 ชม.</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">7-11 ภายในโครงการ</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ร้านอาหาร</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ร้านเสริมสวย</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ที่จอดรถ</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">BTS อ่อนนุช 800 ม.</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                  <span className="truncate text-gray-800 dark:text-card-foreground">ใกล้บิ๊กซี 200 ม.</span>
-                </div>
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">รายละเอียดโครงการ</h2>
+              <div className="space-y-2 md:space-y-3 text-sm md:text-base text-gray-700 dark:text-muted-foreground">
+                <p>• โครงการสร้างเสร็จ May 2025</p>
+                <p>• แพลนโอนห้องชั้น 33 Aug 2025</p>
+                <p>• ทำเลเมือง สุขุมวิทชั้นใน</p>
+                <p>• Yield พุ่ง 7%*</p>
+                <p>• ติดถนนพระราม 4</p>
+                <p>• ใกล้ BTS อโศก - MRT สุขุมวิท</p>
+                <p>• ส่วนกลางสวยฉ่ำ 3 ชั้น</p>
+                <p>• พื้นที่ใหญ่กว่า 5,000 ตร.ม.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Price Details */}
+        <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 mb-6 md:mb-8 border border-gray-200 dark:border-border">
+          <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">รายละเอียดราคา</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ตร.ม. ละ:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">103,792.12 THB</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ราคาหน้าสัญญา:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">3,580,000 THB</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ค่าจอง:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">5,000 THB</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ค่าจอง ณ วันทำสัญญา:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">15,000 THB</span>
+              </div>
+            </div>
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ผ่อนดาวน์เดือนละ:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">6,000++ THB</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-muted-foreground">ผู้ขายต้องการรับ Nett:</span>
+                <span className="font-semibold text-gray-800 dark:text-card-foreground">3,680,000 THB</span>
+              </div>
+              <div className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground mt-2">
+                <p>• ไม่มีค่าใช้จ่ายในการเปลี่ยนชื่อ</p>
+                <p>• ผู้ซื้อผ่อนต่อกับทางโครงการได้</p>
               </div>
             </div>
           </div>
@@ -253,7 +246,7 @@ export default function Home() {
             <div className="text-center order-1 md:order-1">
               <div className="bg-gray-100 dark:bg-muted rounded-lg p-3 md:p-4 inline-block">
                 <Image
-                  src="/images/qr.jpg"
+                  src="/images/moolin/qr-moolin.jpg"
                   alt="QR Code"
                   width={120}
                   height={120}
@@ -266,14 +259,14 @@ export default function Home() {
             {/* Contact Info */}
             <div className="text-center space-y-3 md:space-y-4 order-2 md:order-2">
               <div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-card-foreground mb-1 md:mb-2">ปุย</h3>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">เจ้าของผู้หญิงอยู่เอง</p>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">ไม่เคยปล่อยเช่า</p>
+                <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-card-foreground mb-1 md:mb-2">ไพลิน</h3>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">เจ้าของขายผ่อนดาวน์</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">ซื้อห้องที่ใหญ่กว่าในโครงการเดิม</p>
               </div>
               
               <div className="space-y-1 md:space-y-2">
                 <p className="text-xs md:text-sm text-gray-600 dark:text-muted-foreground">Line ID:</p>
-                <p className="font-semibold text-blue-600 dark:text-blue-400 text-sm md:text-base">thepuihs22</p>
+                <p className="font-semibold text-blue-600 dark:text-blue-400 text-sm md:text-base">moolin</p>
               </div>
             </div>
 
@@ -286,7 +279,7 @@ export default function Home() {
                 <svg className="w-5 h-5 md:w-6 md:h-6 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                <span className="truncate">โทร: 091-142-1142</span>
+                <span className="truncate">โทร: 093-663-6159</span>
               </button>
               
               <button
@@ -306,17 +299,32 @@ export default function Home() {
         <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 border border-gray-200 dark:border-border">
           <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-card-foreground">ข้อมูลเพิ่มเติม</h2>
           <div className="space-y-2 md:space-y-3 text-sm md:text-base text-gray-700 dark:text-muted-foreground">
-            <p>• Built-In ทั้งห้องพร้อมเข้าอยู่</p>
-            <p>• ห้องครัวปิด</p>
-            <p>• ห้องสภาพสวยพร้อมอยู่</p>
-            <p>• กล้องวงจรปิด / คีย์การ์ด</p>
+            <p>• ห้อง type นี้ หน้าโครงการขายหมดแล้ว</p>
+            <p>• ห้องริมสุด private สุดสุด</p>
+            <p>• วิวเมือง และ ไม่โดนตึกใกล้เคียงบังวิว</p>
+            <p>• หัวนอนไม่ fix สามารถปรับทิศทางให้เหมาะสมกับแต่ละบุคคล</p>
+            <p>• ซิตี้โซนคอนโด ติดถนนพระราม 4</p>
+            <p>• ทำเลมีสีสัน ท่ามกลางไลฟ์สไตล์ที่มีแสงสี เอกมัย - ทองหล่อ - พร้อมพงษ์</p>
+            <p>• ตอบโจทย์คนเมืองยุคใหม่วิถีชีวิต Work – Active – Retreat</p>
           </div>
+        </div>
+
+        {/* More Info Link */}
+        <div className="text-center mt-6 md:mt-8">
+          <a 
+            href="https://www.apthai.com/ebrochure/index.html?project=aspire-sukhumvit-rama4&type=condominium&locale=th" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-block bg-blue-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-lg text-base md:text-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            ดูข้อมูลเพิ่มเติม
+          </a>
         </div>
 
         {/* Hashtags */}
         <div className="text-center mt-6 md:mt-8">
           <div className="flex flex-wrap justify-center gap-1 md:gap-2">
-            {['#ดีไลท์แอทอ่อนนุชสเตชั่น', '#UDelightOnnutStation', '#คอนโดอ่อนนุช', '#คอนโดยูดีไลท์อ่อนนุช', '#คอนโดใกล้BTSอ่ออนุช'].map((tag, index) => (
+            {['#AspireSukumvitRama4', '#AspireSukumvit', '#คอนโดพระราม4', '#คอนโดสุขุมวิท', '#ขายผ่อนดาวน์', '#คอนโดชั้นใน'].map((tag, index) => (
               <span key={index} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">
                 {tag}
               </span>
@@ -326,4 +334,4 @@ export default function Home() {
       </main>
     </div>
   );
-}
+} 
