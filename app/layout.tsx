@@ -19,12 +19,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น | ราคา 2.49 ล้านบาท",
+  title: "ขาย คอนโด",
   description: "ขายคอนโด U Delight @ Onnut Station ขนาด 30 ตรม. 1 ห้องนอน 1 ห้องน้ำ ชั้น 20 วิวสระว่ายน้ำ พร้อมเครื่องใช้ไฟฟ้า Built-in ทั้งห้อง ใกล้ BTS อ่อนนุช 800 ม. ราคา 2.49 ล้านบาท",
   keywords: "คอนโด, ยูดีไลท์, อ่อนนุช, BTS, ขายคอนโด, คอนโดใกล้BTS, คอนโดอ่อนนุช",
   authors: [{ name: "ปุย" }],
   openGraph: {
-    title: "ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น | ราคา 2.49 ล้านบาท",
+    title: "ขาย คอนโด",
     description: "ขายคอนโด U Delight @ Onnut Station ขนาด 30 ตรม. 1 ห้องนอน 1 ห้องน้ำ ชั้น 20 วิวสระว่ายน้ำ พร้อมเครื่องใช้ไฟฟ้า Built-in ทั้งห้อง ใกล้ BTS อ่อนนุช 800 ม. ราคา 2.49 ล้านบาท",
     url: "https://your-domain.com", // Replace with your actual domain
     siteName: "คอนโด ยู ดีไลท์ อ่อนนุช",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น | ราคา 2.49 ล้านบาท",
+    title: "ขาย คอนโด",
     description: "ขายคอนโด U Delight @ Onnut Station ขนาด 30 ตรม. 1 ห้องนอน 1 ห้องน้ำ ชั้น 20 วิวสระว่ายน้ำ พร้อมเครื่องใช้ไฟฟ้า Built-in ทั้งห้อง ใกล้ BTS อ่อนนุช 800 ม. ราคา 2.49 ล้านบาท",
     images: ["/images/living-1.jpg"],
   },

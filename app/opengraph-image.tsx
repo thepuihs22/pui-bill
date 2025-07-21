@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
 
-export const alt = 'ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น | ราคา 2.49 ล้านบาท'
+export const alt = 'ขายคอนโด | Condo for Sale | ราคาดี ตำแหน่งดี'
 export const contentType = 'image/png'
 export const size = {
   width: 1200,
@@ -59,7 +59,7 @@ export default async function Image() {
               maxWidth: '1000px',
             }}
           >
-            ขาย คอนโด ยู ดีไลท์ แอท อ่อนนุช สเตชั่น
+            ขายคอนโด | Condo for Sale
           </h1>
           
           {/* Subtitle */}
@@ -72,7 +72,7 @@ export default async function Image() {
               lineHeight: 1.3,
             }}
           >
-            U Delight @ Onnut Station
+            ราคาดี ตำแหน่งดี | Best Price & Location
           </h2>
           
           {/* Price Badge */}
@@ -88,7 +88,7 @@ export default async function Image() {
               boxShadow: '0 10px 25px rgba(220, 38, 38, 0.3)',
             }}
           >
-            ราคา 2.49 ล้านบาท
+            ราคาพิเศษ | Special Price
           </div>
           
           {/* Property Details */}
@@ -101,13 +101,11 @@ export default async function Image() {
               margin: '0 0 30px 0',
             }}
           >
-            <span>30 ตรม.</span>
+            <span>หลายขนาด</span>
             <span>•</span>
-            <span>1 ห้องนอน</span>
+            <span>หลายชั้น</span>
             <span>•</span>
-            <span>1 ห้องน้ำ</span>
-            <span>•</span>
-            <span>ชั้น 20</span>
+            <span>พร้อมเข้าอยู่</span>
           </div>
           
           {/* Location */}
@@ -119,7 +117,7 @@ export default async function Image() {
               margin: '0 0 20px 0',
             }}
           >
-            ใกล้ BTS อ่อนนุช 800 ม.
+            ตำแหน่งดี ใกล้รถไฟฟ้า | Prime Location Near BTS
           </div>
           
           {/* Contact Info */}
@@ -130,7 +128,7 @@ export default async function Image() {
               margin: '0',
             }}
           >
-            ติดต่อ: ปุย | Line: thepuihs22 | โทร: 091-142-1142
+            ติดต่อสอบถาม | Contact for Details
           </div>
         </div>
         
